@@ -560,3 +560,9 @@
     flex-direction: column;
   }
 }
+
+.delivery-live-location{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin:16px 0;padding:14px;border:1px solid #dbe8dc;border-radius:10px;background:#f0f6ef}
+.delivery-live-location div{display:flex;flex-direction:column;gap:5px}
+.delivery-live-location strong{display:flex;align-items:center;gap:7px;color:#174b3b;font-size:13px}
+.delivery-live-location span{color:#68766c;font-size:11px}
+.delivery-live-location a{color:#174b3b;font-size:13px;font-weight:700}
