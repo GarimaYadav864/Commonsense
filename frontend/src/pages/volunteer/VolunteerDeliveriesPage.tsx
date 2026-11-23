@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { MapPin, Package, RefreshCw, Truck, User, CheckCircle } from "lucide-react";
 import api from "../../services/api";
 import "./VolunteerDeliveriesPage.css";
@@ -40,6 +40,8 @@ function VolunteerDeliveriesPage() {
   const [loading, setLoading] = useState(true);
   const [claimingId, setClaimingId] = useState<string | null>(null);
   const [updatingId, setUpdatingId] = useState<string | null>(null);
+  const [sharingId, setSharingId] = useState<string | null>(null);
+  const locationWatchId = useRef<number | null>(null);
   const [activeTab, setActiveTab] = useState<"available" | "assigned">(
     "available"
   );
@@ -111,6 +113,58 @@ function VolunteerDeliveriesPage() {
     } finally {
       setUpdatingId(null);
     }
+  };
+
+
+  const stopLocationSharing = () => {
+    if (locationWatchId.current !== null && navigator.geolocation) {
+      navigator.geolocation.clearWatch(locationWatchId.current);
+      locationWatchId.current = null;
+    }
+    setSharingId(null);
+  };
+
+  useEffect(() => {
+    return () => {
+      if (locationWatchId.current !== null && navigator.geolocation) {
+        navigator.geolocation.clearWatch(locationWatchId.current);
+      }
+    };
+  }, []);
+
+  const startLocationSharing = (deliveryId: string) => {
+    if (!navigator.geolocation) {
+      setMessage("This browser does not support location sharing.");
+      return;
+    }
+    if (!window.isSecureContext) {
+      setMessage("Location sharing requires HTTPS. Open the deployed site securely.");
+      return;
+    }
+    if (locationWatchId.current !== null) navigator.geolocation.clearWatch(locationWatchId.current);
+    setMessage("Requesting location permission...");
+    setSharingId(deliveryId);
+    locationWatchId.current = navigator.geolocation.watchPosition(
+      async (position) => {
+        try {
+          await api.patch(`/deliveries/${deliveryId}/location`, {
+            latitude: position.coords.latitude,
+            longitude: position.coords.longitude,
+          });
+          setMessage("Your location is being shared with the requester.");
+        } catch (error: any) {
+          stopLocationSharing();
+          setMessage(error.response?.data?.message || "Location update failed. Sharing stopped.");
+        }
+      },
+      (error) => {
+        stopLocationSharing();
+        setMessage(error.code === error.PERMISSION_DENIED
+          ? "Location permission was denied. Enable it in your browser to share your route."
+          : "Unable to read your location. Check device location settings and try again.");
+      },
+      { enableHighAccuracy: true, maximumAge: 10000, timeout: 15000 }
+    );
   };
 
   const renderDeliveryCard = (
@@ -204,6 +258,17 @@ function VolunteerDeliveriesPage() {
           )}
 
 
+
+          {delivery.status === "in_transit" && (
+            <div className="volunteer-location-sharing">
+              <p>Share your current position with the requester while you travel.</p>
+              {sharingId === delivery._id ? (
+                <button type="button" className="volunteer-progress-btn secondary" onClick={stopLocationSharing}>Stop location sharing</button>
+              ) : (
+                <button type="button" className="volunteer-progress-btn" onClick={() => startLocationSharing(delivery._id)}>Share my live location</button>
+              )}
+            </div>
+          )}
           <div className="volunteer-status-actions">
             {delivery.status === "dispatched" && (
               <button
