@@ -1,5 +1,5 @@
 
-const { notifyAdmins } = require("../services/notificationService");
+const { notifyCommunityUsers } = require("../services/notificationService");
 const Request = require("../models/Request");
 
 // CREATE REQUEST
@@ -86,14 +86,18 @@ const createRequest = async (req, res) => {
       requester: req.user._id,
     });
 
-    // Notify admins about the newly created request.
-    await notifyAdmins(req.app.get("io"), {
-      type: "admin_new_request",
-      title: "New community request",
-      message: `A new request "${request.title}" was submitted.`,
-      relatedId: request._id,
-      relatedModel: "Request",
-    });
+    // Notify every other registered user about the new community request.
+    await notifyCommunityUsers(
+      req.app.get("io"),
+      {
+        type: "community_request_posted",
+        title: "New community request",
+        message: `A community member needs: ${request.title}.`,
+        relatedId: request._id,
+        relatedModel: "Request",
+      },
+      req.user._id
+    );
 
     return res.status(201).json({
       success: true,
@@ -114,15 +118,11 @@ const createRequest = async (req, res) => {
 // GET ALL REQUESTS
 const getRequests = async (req, res) => {
   try {
-    const filter = {};
-
-    // Requesters see their own requests.
-    // Providers and volunteers can browse pending requests.
-    if (req.user.role === "requester") {
-      filter.requester = req.user._id;
-    } else {
-      filter.status = { $in: ["pending", "matching"] };
-    }
+    // Every authenticated role can browse active community requests.
+    // A user's private request history remains available at /requests/my.
+    const filter = {
+      status: { $in: ["pending", "matching", "offered"] },
+    };
 
     const requests = await Request.find(filter)
       .populate("requester", "name location")
