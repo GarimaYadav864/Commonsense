@@ -408,6 +408,7 @@ const markDispatched = async (req, res) => {
         _id: req.params.id,
         provider: req.user._id,
         status: "arranged",
+        dispatchConditionReport: { $ne: null },
         $or: [
           { method: "self_pickup" },
           {
@@ -593,6 +594,33 @@ const updateVolunteerLocation = async (req, res) => {
   }
 };
 
+const submitConditionReport = async (req, res) => {
+  try {
+    const { stage, condition, notes = "", photos = [] } = req.body;
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) return res.status(400).json({ success: false, message: "Invalid delivery ID" });
+    if (!["dispatch", "receipt"].includes(stage) || !["good", "fair", "damaged", "missing"].includes(condition)) return res.status(400).json({ success: false, message: "Choose a valid report stage and condition" });
+    if (typeof notes !== "string" || notes.length > 1000 || !Array.isArray(photos) || photos.length > 3) return res.status(400).json({ success: false, message: "Notes must be under 1000 characters and up to 3 photos are allowed" });
+    const validPhotos = photos.every((photo) => typeof photo === "string" && photo.length <= 500000 && /^data:image\\/(jpeg|png|webp);base64,[A-Za-z0-9+/]+=*$/.test(photo));
+    if (!validPhotos) return res.status(400).json({ success: false, message: "Each photo must be a JPEG, PNG or WebP image under 350 KB" });
+    const isProvider = stage === "dispatch" && req.user.role === "provider";
+    const isRequester = stage === "receipt" && req.user.role === "requester";
+    if (!isProvider && !isRequester) return res.status(403).json({ success: false, message: "You are not allowed to submit this condition report" });
+    const reportField = stage === "dispatch" ? "dispatchConditionReport" : "receiptConditionReport";
+    const filter = { _id: req.params.id, [reportField]: null };
+    if (stage === "dispatch") Object.assign(filter, { provider: req.user._id, status: "arranged" });
+    else Object.assign(filter, { requester: req.user._id, status: { $in: ["dispatched", "in_transit", "delivered"] }, requesterConfirmed: false });
+    const report = { condition, notes: notes.trim(), photos, reportedBy: req.user._id, reportedAt: new Date() };
+    const delivery = await Delivery.findOneAndUpdate(filter, { $set: { [reportField]: report } }, { new: true, runValidators: true });
+    if (!delivery) return res.status(409).json({ success: false, message: "Report already submitted or delivery is not at the correct handover stage" });
+    const recipient = stage === "dispatch" ? delivery.requester : delivery.provider;
+    await Promise.allSettled([createNotification({ io: req.app.get("io"), recipient, type: "delivery_condition_reported", title: stage === "dispatch" ? "Pre-dispatch condition recorded" : "Arrival condition recorded", message: stage === "dispatch" ? "The provider recorded the resource condition before dispatch." : "The requester recorded the resource condition on arrival.", relatedId: delivery._id, relatedModel: "Delivery" })]);
+    return res.status(200).json({ success: true, message: "Condition report saved", delivery });
+  } catch (error) {
+    console.error("Condition report error:", error);
+    return res.status(500).json({ success: false, message: "Unable to save condition report" });
+  }
+};
+
 // REQUESTER CONFIRMS RECEIPT
 
 
@@ -616,6 +644,7 @@ const confirmReceipt = async (req, res) => {
           _id: req.params.id,
           requester: req.user._id,
           status: { $in: ["dispatched", "in_transit", "delivered"] },
+          receiptConditionReport: { $ne: null },
           requesterConfirmed: false,
         },
         {
@@ -729,5 +758,6 @@ module.exports = {
   markDispatched,
   updateVolunteerDeliveryStatus,
   updateVolunteerLocation,
+  submitConditionReport,
   confirmReceipt,
 };
