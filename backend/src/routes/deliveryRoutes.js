@@ -9,6 +9,7 @@ const {
   claimDelivery,
   markDispatched,
   updateVolunteerDeliveryStatus,
+  updateVolunteerLocation,
   confirmReceipt,
 } = require("../controllers/deliveryController");
 
@@ -51,6 +52,8 @@ router.patch(
   authorizeRoles("volunteer"),
   updateVolunteerDeliveryStatus
 );
+
+router.patch("/:id/location", authorizeRoles("volunteer"), updateVolunteerLocation);
 
 // Provider dispatches the resource
 router.patch(
