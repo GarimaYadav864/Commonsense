@@ -102,6 +102,11 @@ const deliverySchema = new mongoose.Schema(
       default: null,
     },
 
+    deliveredAt: {
+      type: Date,
+      default: null,
+    },
+
     receivedAt: {
       type: Date,
       default: null,
