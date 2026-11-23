@@ -1,0 +1,151 @@
+.admin-dashboard {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+
+.admin-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+}
+
+.admin-eyebrow {
+  color: #b18b3e;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+}
+
+.admin-heading h1 {
+  color: #031f1b;
+  font-family: "Playfair Display", serif;
+  font-size: 34px;
+  margin: 8px 0;
+}
+
+.admin-heading p {
+  color: #727c73;
+  font-size: 14px;
+}
+
+.admin-refresh {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 11px 15px;
+  border: 1px solid #e3e7df;
+  border-radius: 9px;
+  background: white;
+  color: #286b50;
+  cursor: pointer;
+}
+
+.admin-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.admin-stat-card {
+  padding: 22px;
+  border: 1px solid #e7e9e2;
+  border-radius: 14px;
+  background: white;
+}
+
+.admin-stat-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  color: #727c73;
+  font-size: 13px;
+}
+
+.admin-stat-top svg {
+  color: #286b50;
+}
+
+.admin-stat-card h2 {
+  margin-top: 22px;
+  color: #031f1b;
+  font-size: 30px;
+}
+
+.admin-stat-card p {
+  margin-top: 5px;
+  color: #727c73;
+  font-size: 12px;
+}
+
+.admin-role-section {
+  padding: 25px;
+  border: 1px solid #e7e9e2;
+  border-radius: 14px;
+  background: white;
+}
+
+.admin-role-section h2 {
+  margin-bottom: 20px;
+  color: #031f1b;
+  font-family: "Playfair Display", serif;
+  font-size: 23px;
+}
+
+.admin-role-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 15px;
+}
+
+.admin-role-grid div {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 17px;
+  border-radius: 10px;
+  background: #f8f6ef;
+}
+
+.admin-role-grid span {
+  color: #727c73;
+  font-size: 12px;
+}
+
+.admin-role-grid strong {
+  color: #031f1b;
+  font-size: 24px;
+}
+
+.admin-error {
+  padding: 12px;
+  border-radius: 9px;
+  background: #f9eeeb;
+  color: #a33f34;
+}
+
+.admin-loading {
+  padding: 40px;
+  text-align: center;
+  color: #727c73;
+}
+
+@media (max-width: 850px) {
+  .admin-stats-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 550px) {
+  .admin-heading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .admin-stats-grid,
+  .admin-role-grid {
+    grid-template-columns: 1fr;
+  }
+}

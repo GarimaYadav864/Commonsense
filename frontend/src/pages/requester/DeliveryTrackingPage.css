@@ -1,0 +1,392 @@
+
+.delivery-page {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding-bottom: 40px;
+  color: var(--text);
+}
+
+.delivery-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+  margin-bottom: 26px;
+}
+
+.delivery-heading h1 {
+  margin: 7px 0;
+  font-family: "Playfair Display", serif;
+  font-size: 34px;
+}
+
+.delivery-heading p {
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.delivery-refresh {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 11px 15px;
+  border: 1px solid #e5e7df;
+  border-radius: 8px;
+  background: white;
+  color: var(--forest);
+  cursor: pointer;
+}
+
+.delivery-summary {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 15px;
+  margin-bottom: 24px;
+}
+
+.delivery-summary > div {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  padding: 20px;
+  border: 1px solid #e8e8df;
+  border-radius: 11px;
+  background: white;
+}
+
+.delivery-summary span {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.delivery-summary strong {
+  color: var(--forest);
+  font-size: 25px;
+}
+
+.delivery-list {
+  display: grid;
+  gap: 18px;
+}
+
+.delivery-card {
+  padding: 23px;
+  border: 1px solid #e8e8df;
+  border-radius: 12px;
+  background: white;
+}
+
+.delivery-card-heading,
+.delivery-card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 15px;
+}
+
+.delivery-reference {
+  color: var(--forest-light);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1.2px;
+}
+
+.delivery-card h3 {
+  margin-top: 7px;
+  font-size: 18px;
+}
+
+.delivery-status {
+  padding: 7px 12px;
+  border-radius: 20px;
+  background: #f0f0ed;
+  color: #666;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.status-arranged {
+  background: #fff3d8;
+  color: #946a15;
+}
+
+.status-dispatched {
+  background: #e8efff;
+  color: #385b9d;
+}
+
+.status-delivered,
+.status-received {
+  background: #e4f2e7;
+  color: #347348;
+}
+
+.status-cancelled {
+  background: #fce9e7;
+  color: #a0443b;
+}
+
+.delivery-provider {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  margin: 20px 0;
+}
+
+.provider-avatar {
+  width: 39px;
+  height: 39px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--sage);
+  color: var(--forest);
+  font-weight: 700;
+}
+
+.delivery-provider > div:last-child {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.delivery-provider span {
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.delivery-provider strong {
+  font-size: 13px;
+}
+
+.delivery-meta {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 15px;
+  padding: 16px 0;
+  border-top: 1px solid #f0f0e9;
+  border-bottom: 1px solid #f0f0e9;
+}
+
+.delivery-meta > div {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.delivery-meta span,
+.delivery-meta strong {
+  font-size: 12px;
+}
+
+.delivery-meta span {
+  color: var(--muted);
+}
+
+.delivery-addresses {
+  display: grid;
+  gap: 12px;
+  margin-top: 17px;
+}
+
+.delivery-addresses > div {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.delivery-addresses svg {
+  flex-shrink: 0;
+  color: var(--forest-light);
+  margin-top: 2px;
+}
+
+.delivery-addresses strong {
+  color: var(--text);
+}
+
+.transport-details {
+  margin-top: 13px;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.transport-details strong {
+  color: var(--text);
+}
+
+.delivery-timeline {
+  margin-top: 25px;
+  padding: 18px;
+  background: #fafaf6;
+  border-radius: 10px;
+}
+
+.delivery-timeline h4 {
+  margin-bottom: 20px;
+  font-size: 13px;
+}
+
+.timeline-steps {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+
+.timeline-step {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 9px;
+  text-align: center;
+  color: #a0a49b;
+  font-size: 10px;
+}
+
+.timeline-step::before {
+  content: "";
+  position: absolute;
+  height: 2px;
+  width: calc(100% - 30px);
+  background: #e1e4dc;
+  top: 15px;
+  left: calc(-50% + 15px);
+}
+
+.timeline-step:first-child::before {
+  display: none;
+}
+
+.timeline-dot {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: #e8eae4;
+  color: #858a80;
+}
+
+.timeline-step.completed {
+  color: var(--forest);
+  font-weight: 600;
+}
+
+.timeline-step.completed .timeline-dot {
+  background: var(--forest);
+  color: white;
+}
+
+.delivery-dates {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 18px;
+  margin-top: 15px;
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.delivery-card-footer {
+  flex-wrap: wrap;
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid #f0f0e9;
+}
+
+.delivery-method-label {
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.receipt-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 10px 15px;
+  border: 1px solid var(--forest);
+  border-radius: 7px;
+  background: var(--forest);
+  color: white;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.receipt-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.receipt-confirmed {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: #347348;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.delivery-empty,
+.delivery-loading {
+  padding: 65px 20px;
+  border: 1px solid #e8e8df;
+  border-radius: 12px;
+  background: white;
+  text-align: center;
+  color: var(--muted);
+}
+
+.delivery-empty h3 {
+  margin: 15px 0 8px;
+  color: var(--text);
+}
+
+.delivery-empty p,
+.delivery-loading p {
+  font-size: 13px;
+  line-height: 1.7;
+}
+
+.delivery-error {
+  margin-bottom: 18px;
+  padding: 13px;
+  border-radius: 8px;
+  background: #fff0ee;
+  color: #a0443b;
+  font-size: 13px;
+}
+
+@media (max-width: 700px) {
+  .delivery-heading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .delivery-summary {
+    gap: 8px;
+  }
+
+  .delivery-summary > div {
+    padding: 13px;
+  }
+
+  .timeline-steps {
+    grid-template-columns: repeat(2, 1fr);
+    row-gap: 20px;
+  }
+
+  .timeline-step::before {
+    display: none;
+  }
+
+  .delivery-card-heading {
+    align-items: flex-start;
+  }
+}

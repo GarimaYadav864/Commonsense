@@ -1,0 +1,257 @@
+.volunteer-deliveries-page {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.volunteer-page-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.volunteer-page-heading h1 {
+  color: #031f1b;
+  font-family: "Playfair Display", serif;
+  font-size: 32px;
+  margin: 8px 0;
+}
+
+.volunteer-page-heading p {
+  color: #727c73;
+  font-size: 14px;
+}
+
+.volunteer-refresh-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 15px;
+  background: white;
+  border: 1px solid #e1e5dc;
+  border-radius: 9px;
+  color: #286b50;
+  cursor: pointer;
+}
+
+.volunteer-tabs {
+  display: flex;
+  gap: 10px;
+  border-bottom: 1px solid #e5e8e1;
+}
+
+.volunteer-tabs button {
+  padding: 12px 16px;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  background: transparent;
+  color: #727c73;
+  font: inherit;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.volunteer-tabs button.active {
+  color: #286b50;
+  border-bottom-color: #286b50;
+  font-weight: 700;
+}
+
+.volunteer-delivery-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.volunteer-delivery-card {
+  background: white;
+  border: 1px solid #e7e9e2;
+  border-radius: 14px;
+  padding: 22px;
+}
+
+.volunteer-delivery-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 17px;
+}
+
+.volunteer-delivery-icon {
+  width: 42px;
+  height: 42px;
+  display: grid;
+  place-items: center;
+  border-radius: 11px;
+  color: #286b50;
+  background: #e7efe5;
+}
+
+.delivery-status {
+  padding: 6px 10px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.delivery-status.open {
+  color: #286b50;
+  background: #e7efe5;
+}
+
+.delivery-status.claimed {
+  color: #8b6824;
+  background: #f8f0dc;
+}
+
+.volunteer-delivery-card h3 {
+  color: #031f1b;
+  font-size: 18px;
+  margin-bottom: 8px;
+}
+
+.volunteer-delivery-description {
+  color: #727c73;
+  font-size: 13px;
+  line-height: 1.6;
+  margin-bottom: 18px;
+}
+
+.volunteer-delivery-details {
+  display: flex;
+  flex-direction: column;
+  gap: 11px;
+  padding: 15px 0;
+  border-top: 1px solid #eef0eb;
+  border-bottom: 1px solid #eef0eb;
+}
+
+.volunteer-delivery-details div,
+.volunteer-assigned-info p {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  color: #59665c;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.volunteer-delivery-details svg,
+.volunteer-assigned-info p svg {
+  flex-shrink: 0;
+  color: #64816b;
+}
+
+.claim-delivery-btn {
+  width: 100%;
+  margin-top: 18px;
+  padding: 12px;
+  border: 0;
+  border-radius: 9px;
+  background: #031f1b;
+  color: #fff;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.claim-delivery-btn:hover {
+  background: #174b3b;
+}
+
+.claim-delivery-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.volunteer-assigned-info {
+  margin-top: 17px;
+  padding: 15px;
+  border-radius: 10px;
+  background: #f8f6ef;
+}
+
+.volunteer-assigned-info h4 {
+  color: #031f1b;
+  font-size: 13px;
+  margin-bottom: 12px;
+}
+
+.volunteer-assigned-info p {
+  margin: 9px 0;
+  overflow-wrap: anywhere;
+}
+
+.volunteer-assigned-info .transport-notes {
+  display: block;
+}
+
+.volunteer-flow-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid #e7e5dc;
+  color: #286b50;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.volunteer-flow-note svg {
+  flex-shrink: 0;
+}
+
+.volunteer-message {
+  padding: 12px 15px;
+  background: #e7efe5;
+  color: #286b50;
+  border-radius: 9px;
+  font-size: 13px;
+}
+
+.volunteer-empty-state {
+  min-height: 230px;
+  padding: 35px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  background: white;
+  border: 1px dashed #dce2d8;
+  border-radius: 14px;
+  color: #727c73;
+}
+
+.volunteer-empty-state svg {
+  color: #64816b;
+  margin-bottom: 12px;
+}
+
+.volunteer-empty-state h3 {
+  color: #031f1b;
+  margin-bottom: 8px;
+}
+
+.volunteer-empty-state p {
+  font-size: 13px;
+}
+
+@media (max-width: 800px) {
+  .volunteer-delivery-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 550px) {
+  .volunteer-page-heading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .volunteer-page-heading h1 {
+    font-size: 27px;
+  }
+}

@@ -1,0 +1,78 @@
+
+.admin-sidebar {
+  width: 255px;
+  min-height: 100vh;
+  background: #031f1b;
+  color: #f8f6ef;
+  display: flex;
+  flex-direction: column;
+  padding: 26px 18px;
+  box-sizing: border-box;
+}
+
+.admin-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 10px 32px;
+  color: #d6b15c;
+}
+
+.admin-brand h2 {
+  margin: 0;
+  font-size: 19px;
+  color: #f8f6ef;
+}
+
+.admin-brand span {
+  font-size: 10px;
+  letter-spacing: 2px;
+  color: #d6b15c;
+}
+
+.admin-nav-label {
+  padding: 0 12px;
+  color: #91a59d;
+  font-size: 10px;
+  letter-spacing: 1.5px;
+  margin-bottom: 12px;
+}
+
+.admin-navigation {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.admin-nav-link,
+.admin-logout {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  padding: 13px 12px;
+  border-radius: 8px;
+  color: #d5dfd9;
+  text-decoration: none;
+  background: transparent;
+  border: none;
+  font-size: 14px;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.admin-nav-link:hover,
+.admin-nav-link.active {
+  background: #174138;
+  color: #e2bd69;
+}
+
+.admin-logout {
+  margin-top: auto;
+  color: #e6c1b7;
+  width: 100%;
+}
+
+.admin-logout:hover {
+  background: #442a26;
+}
+

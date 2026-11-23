@@ -1,0 +1,329 @@
+
+.admin-records-page {
+  color: #17332c;
+}
+
+.records-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+  margin-bottom: 28px;
+}
+
+.records-eyebrow {
+  color: #a58236;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1.8px;
+}
+
+.records-heading h1 {
+  margin: 8px 0;
+  font-size: 28px;
+}
+
+.records-heading p {
+  margin: 0;
+  color: #75827b;
+  font-size: 14px;
+}
+
+.records-refresh,
+.records-reset,
+.records-pagination button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: 1px solid #dce4dc;
+  background: #fff;
+  color: #17332c;
+  border-radius: 8px;
+  padding: 10px 14px;
+  cursor: pointer;
+}
+
+.records-refresh:disabled,
+.records-pagination button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.records-tabs {
+  display: flex;
+  gap: 10px;
+  border-bottom: 1px solid #e0e7df;
+  margin-bottom: 20px;
+}
+
+.records-tabs button {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 13px 18px;
+  background: transparent;
+  border: none;
+  border-bottom: 3px solid transparent;
+  color: #718078;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.records-tabs button.active {
+  color: #174138;
+  border-bottom-color: #d6b15c;
+}
+
+.records-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 18px;
+}
+
+.records-search {
+  flex: 1 1 260px;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 0 12px;
+  border: 1px solid #dce4dc;
+  border-radius: 8px;
+  background: white;
+  color: #78867e;
+}
+
+.records-search input {
+  width: 100%;
+  min-width: 0;
+  border: none;
+  outline: none;
+  padding: 12px 0;
+  background: transparent;
+}
+
+.records-filter-input,
+.records-toolbar select {
+  min-width: 145px;
+  padding: 11px 12px;
+  border: 1px solid #dce4dc;
+  border-radius: 8px;
+  background: white;
+  color: #17332c;
+  outline: none;
+}
+
+.records-summary {
+  display: flex;
+  justify-content: space-between;
+  color: #7b8981;
+  font-size: 13px;
+  margin-bottom: 12px;
+}
+
+.records-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.record-card {
+  border: 1px solid #e2e9e2;
+  border-radius: 10px;
+  background: white;
+  overflow: hidden;
+}
+
+.record-card-main {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  width: 100%;
+  padding: 16px;
+  border: none;
+  background: transparent;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.record-icon {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  flex-shrink: 0;
+  border-radius: 9px;
+  background: #e7efe5;
+  color: #174138;
+}
+
+.record-primary {
+  flex: 1;
+  min-width: 0;
+}
+
+.record-primary h3 {
+  margin: 0 0 5px;
+  font-size: 15px;
+  overflow-wrap: anywhere;
+}
+
+.record-primary span,
+.record-quantity span {
+  color: #829087;
+  font-size: 12px;
+}
+
+.record-quantity {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 13px;
+}
+
+.record-status {
+  padding: 6px 10px;
+  border-radius: 20px;
+  background: #edf1ed;
+  color: #52655a;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: capitalize;
+  white-space: nowrap;
+}
+
+.status-available,
+.status-fulfilled {
+  background: #e5f2e8;
+  color: #287345;
+}
+
+.status-pending,
+.status-matching,
+.status-offered {
+  background: #fff4dc;
+  color: #92702a;
+}
+
+.status-cancelled,
+.status-unavailable {
+  background: #f8e9e6;
+  color: #a24b3f;
+}
+
+.record-card-main > svg:last-child {
+  transition: transform 0.2s ease;
+}
+
+.record-card-main > svg.expanded {
+  transform: rotate(180deg);
+}
+
+.record-details {
+  padding: 16px 20px 18px 73px;
+  border-top: 1px solid #edf1ed;
+  background: #fbfcfa;
+}
+
+.record-details p {
+  color: #52645a;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.record-detail-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin: 15px 0;
+}
+
+.record-detail-grid span {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #53645b;
+  font-size: 12px;
+}
+
+.record-details small {
+  display: block;
+  margin-top: 7px;
+  color: #829087;
+  overflow-wrap: anywhere;
+}
+
+.records-empty {
+  text-align: center;
+  padding: 55px 20px;
+  color: #819087;
+  border: 1px dashed #dce4dc;
+  border-radius: 10px;
+}
+
+.records-empty h3 {
+  color: #274238;
+}
+
+.records-error {
+  padding: 13px;
+  margin-bottom: 15px;
+  border-radius: 8px;
+  background: #f8e9e6;
+  color: #a24b3f;
+}
+
+.records-pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 20px;
+  margin-top: 24px;
+  font-size: 13px;
+}
+
+.records-pagination button {
+  font-size: 13px;
+}
+
+@media (max-width: 700px) {
+  .records-heading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .records-toolbar {
+    flex-direction: column;
+  }
+
+  .records-search,
+  .records-filter-input,
+  .records-toolbar select,
+  .records-reset {
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .record-card-main {
+    gap: 10px;
+    padding: 12px;
+  }
+
+  .record-quantity {
+    display: none;
+  }
+
+  .record-primary h3 {
+    font-size: 13px;
+  }
+
+  .record-details {
+    padding: 14px;
+  }
+
+  .records-summary {
+    gap: 10px;
+  }
+}

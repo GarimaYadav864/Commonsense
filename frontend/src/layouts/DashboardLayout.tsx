@@ -1,0 +1,233 @@
+
+import { useEffect, useState } from "react";
+import {
+  NavLink,
+  Outlet,
+  useLocation,
+  useNavigate,
+} from "react-router-dom";
+
+import {
+  LayoutDashboard,
+  ClipboardList,
+  PlusCircle,
+  Package,
+  Truck,
+  Bell,
+  LogOut,
+  Menu,
+  X,
+  HandHeart,
+  Handshake,
+  Users,
+  ChartNoAxesCombined,
+  ShieldCheck,
+  History,
+  FileBarChart,
+} from "lucide-react";
+
+import { useAuth } from "../context/AuthContext";
+import NotificationCenter from "../components/common/NotificationCenter";
+import "./DashboardLayout.css";
+
+type NavigationLink = {
+  label: string;
+  path: string;
+  icon: typeof LayoutDashboard;
+  end?: boolean;
+};
+
+const requesterLinks: NavigationLink[] = [
+  { label: "Overview", path: "/requester/dashboard", icon: LayoutDashboard },
+  { label: "My Requests", path: "/requester/requests", icon: ClipboardList },
+  { label: "Create Request", path: "/requester/requests/new", icon: PlusCircle },
+  { label: "Offers", path: "/requester/offers", icon: Package },
+  { label: "Deliveries", path: "/requester/deliveries", icon: Truck },
+  { label: "Notifications", path: "/notifications", icon: Bell, end: true },
+];
+
+const providerLinks: NavigationLink[] = [
+  { label: "Dashboard", path: "/provider/dashboard", icon: LayoutDashboard },
+  { label: "My Resources", path: "/provider/resources", icon: Package },
+  { label: "Incoming Offers", path: "/provider/offers", icon: Handshake },
+  { label: "Deliveries", path: "/provider/deliveries", icon: Truck },
+  { label: "Notifications", path: "/notifications", icon: Bell, end: true },
+];
+
+const volunteerLinks: NavigationLink[] = [
+  { label: "Dashboard", path: "/volunteer/dashboard", icon: LayoutDashboard },
+  { label: "Deliveries", path: "/volunteer/deliveries", icon: Truck },
+  { label: "Notifications", path: "/notifications", icon: Bell, end: true },
+];
+
+const adminLinks: NavigationLink[] = [
+  { label: "Dashboard", path: "/admin", icon: LayoutDashboard, end: true },
+  { label: "User Management", path: "/admin/users", icon: Users },
+  { label: "Platform Monitoring", path: "/admin/monitoring", icon: ChartNoAxesCombined },
+  { label: "Requests & Resources", path: "/admin/records", icon: ClipboardList },
+  { label: "Audit Logs", path: "/admin/audit-logs", icon: History },
+  { label: "Reports & Analytics", path: "/admin/reports", icon: FileBarChart },
+  { label: "Notifications", path: "/notifications", icon: Bell, end: true },
+];
+
+export default function DashboardLayout() {
+  const [menuOpen, setMenuOpen] = useState(false);
+
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { user, logout } = useAuth();
+
+  const roleKey = String(user?.role ?? "").toLowerCase();
+
+  useEffect(() => {
+    setMenuOpen(false);
+  }, [location.pathname]);
+
+  const navigationLinks =
+    roleKey === "admin"
+      ? adminLinks
+      : roleKey === "requester"
+        ? requesterLinks
+        : roleKey === "provider"
+          ? providerLinks
+          : roleKey === "volunteer"
+            ? volunteerLinks
+            : [];
+
+  const roleLabel = roleKey
+    ? roleKey.charAt(0).toUpperCase() + roleKey.slice(1)
+    : "Community Member";
+
+  const handleLogout = () => {
+    logout();
+    navigate("/login", { replace: true });
+  };
+
+  return (
+    <div className="dashboard-shell">
+      <aside
+        className={`dashboard-sidebar ${
+          menuOpen ? "sidebar-open" : ""
+        } ${roleKey === "admin" ? "admin-sidebar" : ""}`}
+      >
+        <div className="sidebar-brand">
+          <img src="/commonsense-logo.png" alt="Commonsense logo" />
+          <span>commonsense</span>
+
+          {roleKey === "admin" && (
+            <span className="admin-brand-label">ADMIN</span>
+          )}
+
+          <button
+            type="button"
+            className="sidebar-close"
+            onClick={() => setMenuOpen(false)}
+            aria-label="Close menu"
+          >
+            <X size={20} />
+          </button>
+        </div>
+
+        <div className="sidebar-section-label">WORKSPACE</div>
+
+        <nav className="sidebar-navigation" aria-label="Workspace navigation">
+          {navigationLinks.map(({ label, path, icon: Icon, end }) => (
+            <NavLink
+              key={path}
+              to={path}
+              end={end ?? path.endsWith("/dashboard")}
+              className={({ isActive }) =>
+                `sidebar-link ${isActive ? "active" : ""}`
+              }
+              onClick={() => setMenuOpen(false)}
+            >
+              <Icon size={19} strokeWidth={1.8} />
+              <span>{label}</span>
+            </NavLink>
+          ))}
+        </nav>
+
+        <div className="sidebar-bottom">
+          <div className="sidebar-section-label">ACCOUNT</div>
+
+          <button
+            type="button"
+            className="sidebar-link logout-link"
+            onClick={handleLogout}
+          >
+            <LogOut size={19} />
+            <span>Log out</span>
+          </button>
+
+          <div className="sidebar-community-card">
+            {roleKey === "admin" ? (
+              <ShieldCheck size={23} />
+            ) : (
+              <HandHeart size={23} />
+            )}
+
+            <strong>
+              {roleKey === "admin"
+                ? "Building stronger communities."
+                : "Small acts. Big impact."}
+            </strong>
+
+            <p>
+              {roleKey === "admin"
+                ? "Every connection starts with a better system."
+                : "Every resource shared makes a difference."}
+            </p>
+          </div>
+        </div>
+      </aside>
+
+      {menuOpen && (
+        <button
+          type="button"
+          className="sidebar-overlay"
+          onClick={() => setMenuOpen(false)}
+          aria-label="Close navigation"
+        />
+      )}
+
+      <main className="dashboard-main">
+        <header className="dashboard-topbar">
+          <button
+            type="button"
+            className="mobile-menu-toggle"
+            onClick={() => setMenuOpen(true)}
+            aria-label="Open navigation"
+            aria-expanded={menuOpen}
+          >
+            <Menu size={22} />
+          </button>
+
+          <div className="topbar-breadcrumb">
+            <span>Workspace</span>
+            <span className="breadcrumb-divider">/</span>
+            <strong>{roleLabel}</strong>
+          </div>
+
+          <div className="topbar-actions">
+            <NotificationCenter />
+
+            <div className="topbar-user">
+              <div className="user-avatar">
+                {user?.name?.charAt(0).toUpperCase() || "U"}
+              </div>
+
+              <div className="user-details">
+                <strong>{user?.name || "Community Member"}</strong>
+                <span>{roleLabel}</span>
+              </div>
+            </div>
+          </div>
+        </header>
+
+        <div className="dashboard-content">
+          <Outlet />
+        </div>
+      </main>
+    </div>
+  );
+}

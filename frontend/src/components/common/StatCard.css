@@ -1,0 +1,75 @@
+
+.stat-card {
+  min-width: 0;
+  padding: 22px;
+  background: #ffffff;
+  border: 1px solid #e8ebe4;
+  border-radius: 14px;
+  box-shadow: 0 4px 14px rgba(3, 31, 27, 0.04);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.stat-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 9px 22px rgba(3, 31, 27, 0.08);
+}
+
+.stat-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.stat-card-title {
+  color: #68756d;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.stat-card-icon {
+  width: 42px;
+  height: 42px;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  border-radius: 11px;
+  background: #e7efe5;
+  color: #286b50;
+}
+
+.stat-card-value {
+  margin-top: 17px;
+  color: #031f1b;
+  font-size: 30px;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.stat-card-detail {
+  margin: 8px 0 0;
+  color: #7b867e;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.stat-card-green .stat-card-icon {
+  background: #e7efe5;
+  color: #286b50;
+}
+
+.stat-card-gold .stat-card-icon {
+  background: #f8f0dc;
+  color: #a47c28;
+}
+
+@media (max-width: 600px) {
+  .stat-card {
+    padding: 17px;
+  }
+
+  .stat-card-value {
+    font-size: 25px;
+  }
+}
+

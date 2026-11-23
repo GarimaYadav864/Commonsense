@@ -1,0 +1,344 @@
+
+.provider-offers-page {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding-bottom: 40px;
+  color: var(--text);
+}
+
+.provider-offers-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+  margin-bottom: 25px;
+}
+
+.provider-offers-heading h1 {
+  margin: 7px 0;
+  font-family: "Playfair Display", serif;
+  font-size: 34px;
+}
+
+.provider-offers-heading p {
+  max-width: 620px;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.7;
+}
+
+.provider-offers-refresh {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 11px 15px;
+  border: 1px solid #e5e7df;
+  border-radius: 8px;
+  background: white;
+  color: var(--forest);
+  cursor: pointer;
+  font-size: 12px;
+}
+
+.provider-offers-summary {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+  margin-bottom: 22px;
+}
+
+.provider-offers-summary > div {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  padding: 19px;
+  border: 1px solid #e8e8df;
+  border-radius: 11px;
+  background: white;
+}
+
+.provider-offers-summary span {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.provider-offers-summary strong {
+  color: var(--forest);
+  font-size: 26px;
+}
+
+.provider-offers-list {
+  display: grid;
+  gap: 17px;
+}
+
+.provider-offer-card {
+  padding: 23px;
+  border: 1px solid #e8e8df;
+  border-radius: 12px;
+  background: white;
+}
+
+.provider-offer-card-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 15px;
+}
+
+.matched-label {
+  color: var(--forest-light);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1.2px;
+}
+
+.provider-offer-card h3 {
+  margin-top: 7px;
+  font-size: 18px;
+}
+
+.incoming-status {
+  flex-shrink: 0;
+  padding: 7px 11px;
+  border-radius: 20px;
+  background: #fff3d8;
+  color: #946a15;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.provider-offer-description {
+  margin: 14px 0;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.7;
+}
+
+.provider-offer-request-info {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+  padding: 16px 0;
+  border-top: 1px solid #f0f0e9;
+  border-bottom: 1px solid #f0f0e9;
+}
+
+.provider-offer-request-info > div,
+.provider-offer-requester > div:first-child {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.provider-offer-request-info span,
+.provider-offer-resource span,
+.provider-offer-requester span {
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.provider-offer-request-info strong,
+.provider-offer-requester strong {
+  font-size: 13px;
+}
+
+.request-urgency {
+  text-transform: capitalize;
+}
+
+.request-urgency.low { color: #47835a; }
+.request-urgency.medium { color: #a17a29; }
+.request-urgency.high { color: #c46d31; }
+.request-urgency.critical { color: #bd3939; }
+
+.provider-offer-resource {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 17px 0;
+  padding: 13px;
+  border-radius: 9px;
+  background: #f8faf6;
+}
+
+.offer-resource-icon {
+  display: grid;
+  place-items: center;
+  width: 39px;
+  height: 39px;
+  border-radius: 9px;
+  background: var(--sage);
+  color: var(--forest);
+}
+
+.provider-offer-resource > div:last-child {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.provider-offer-resource strong {
+  font-size: 13px;
+}
+
+.provider-offer-resource small {
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.provider-offer-requester {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #f0f0e9;
+}
+
+.requester-location {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.provider-offer-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 15px;
+  flex-wrap: wrap;
+  margin-top: 16px;
+}
+
+.provider-offer-date {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.provider-offer-actions {
+  display: flex;
+  gap: 9px;
+}
+
+.reject-offer-btn,
+.accept-offer-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 10px 14px;
+  border-radius: 7px;
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.reject-offer-btn {
+  border: 1px solid #e5b8b4;
+  background: white;
+  color: #a0443b;
+}
+
+.accept-offer-btn {
+  border: 1px solid var(--forest);
+  background: var(--forest);
+  color: white;
+}
+
+.reject-offer-btn:disabled,
+.accept-offer-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.provider-offer-message {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 13px;
+  margin-bottom: 16px;
+  border-radius: 8px;
+  font-size: 12px;
+}
+
+.provider-offer-message.error {
+  background: #fff0ee;
+  color: #a0443b;
+}
+
+.provider-offer-message.success {
+  background: #e8f4e9;
+  color: #347348;
+}
+
+.provider-offers-empty,
+.provider-offers-loading {
+  padding: 65px 20px;
+  border: 1px solid #e8e8df;
+  border-radius: 12px;
+  background: white;
+  text-align: center;
+  color: var(--muted);
+}
+
+.provider-offers-empty h3 {
+  margin: 15px 0 8px;
+  color: var(--text);
+}
+
+.provider-offers-empty p,
+.provider-offers-loading p {
+  max-width: 450px;
+  margin: 0 auto 17px;
+  font-size: 12px;
+  line-height: 1.7;
+}
+
+.provider-offers-empty button {
+  padding: 10px 15px;
+  border: 1px solid var(--forest);
+  border-radius: 7px;
+  background: var(--forest);
+  color: white;
+  cursor: pointer;
+  font-size: 12px;
+}
+
+@media (max-width: 700px) {
+  .provider-offers-heading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .provider-offers-summary {
+    gap: 8px;
+  }
+
+  .provider-offers-summary > div {
+    padding: 13px;
+  }
+
+  .provider-offer-request-info {
+    grid-template-columns: 1fr;
+  }
+
+  .provider-offer-card-heading,
+  .provider-offer-requester {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .provider-offer-actions {
+    width: 100%;
+  }
+
+  .provider-offer-actions button {
+    flex: 1;
+  }
+}

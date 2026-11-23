@@ -1,0 +1,381 @@
+
+import { useCallback, useEffect, useState } from "react";
+import {
+  AlertCircle,
+  CheckCircle2,
+  Clock3,
+  MapPin,
+  Package,
+  RefreshCw,
+  Truck,
+  UserRound,
+} from "lucide-react";
+import api from "../../services/api";
+import "./ProviderDeliveriesPage.css";
+
+type DeliveryStatus =
+  | "arranged"
+  | "dispatched"
+  | "delivered"
+  | "received"
+  | "cancelled";
+
+interface Delivery {
+  _id: string;
+  method: "self_pickup" | "community_delivery";
+  pickupAddress?: string;
+  deliveryAddress?: string;
+  transportDetails?: string;
+  quotedCost: number;
+  costCurrency?: string;
+  status: DeliveryStatus;
+  dispatchedAt?: string | null;
+  createdAt: string;
+  request?: {
+    _id?: string;
+    title?: string;
+    description?: string;
+    category?: string;
+    quantity?: number;
+    unit?: string;
+    urgency?: string;
+  };
+  requester?: {
+    _id?: string;
+    name?: string;
+    location?: string;
+  };
+  offer?: {
+    _id?: string;
+  };
+}
+
+const formatDate = (date?: string) => {
+  if (!date) return "Not available";
+
+  return new Date(date).toLocaleString("en-IN", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+};
+
+const getErrorMessage = (error: any) =>
+  error?.response?.data?.message ||
+  error?.message ||
+  "Something went wrong. Please try again.";
+
+export default function ProviderDeliveriesPage() {
+  const [deliveries, setDeliveries] = useState<Delivery[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [dispatchingId, setDispatchingId] = useState<string | null>(null);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+
+  const fetchDeliveries = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError("");
+
+      const response = await api.get("/deliveries/my");
+      const data = response.data?.deliveries;
+
+      setDeliveries(Array.isArray(data) ? data : []);
+    } catch (err) {
+      setError(getErrorMessage(err));
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchDeliveries();
+  }, [fetchDeliveries]);
+
+  const handleDispatch = async (deliveryId: string) => {
+    const confirmed = window.confirm(
+      "Are you sure this resource is ready and has been dispatched?"
+    );
+
+    if (!confirmed) return;
+
+    try {
+      setDispatchingId(deliveryId);
+      setError("");
+      setSuccess("");
+
+      const response = await api.patch(
+        `/deliveries/${deliveryId}/dispatch`
+      );
+
+      setSuccess(
+        response.data?.message || "Delivery marked as dispatched."
+      );
+
+      await fetchDeliveries();
+    } catch (err) {
+      setError(getErrorMessage(err));
+    } finally {
+      setDispatchingId(null);
+    }
+  };
+
+  const pendingCount = deliveries.filter(
+    (item) => item.status === "arranged"
+  ).length;
+
+  const dispatchedCount = deliveries.filter(
+    (item) => item.status === "dispatched"
+  ).length;
+
+  const completedCount = deliveries.filter(
+    (item) => item.status === "received"
+  ).length;
+
+  return (
+    <div className="provider-deliveries">
+      <div className="provider-deliveries-header">
+        <div>
+          <span className="provider-deliveries-eyebrow">
+            LOGISTICS & FULFILMENT
+          </span>
+          <h1>Delivery Management</h1>
+          <p>
+            Track your accepted requests and keep the community updated
+            as resources are dispatched.
+          </p>
+        </div>
+
+        <button
+          className="delivery-refresh-btn"
+          onClick={fetchDeliveries}
+          disabled={loading}
+        >
+          <RefreshCw size={16} className={loading ? "spinning" : ""} />
+          Refresh
+        </button>
+      </div>
+
+      <div className="delivery-stats">
+        <div className="delivery-stat-card">
+          <span className="delivery-stat-icon pending">
+            <Clock3 size={20} />
+          </span>
+          <div>
+            <strong>{pendingCount}</strong>
+            <span>Awaiting dispatch</span>
+          </div>
+        </div>
+
+        <div className="delivery-stat-card">
+          <span className="delivery-stat-icon dispatched">
+            <Truck size={20} />
+          </span>
+          <div>
+            <strong>{dispatchedCount}</strong>
+            <span>In transit</span>
+          </div>
+        </div>
+
+        <div className="delivery-stat-card">
+          <span className="delivery-stat-icon completed">
+            <CheckCircle2 size={20} />
+          </span>
+          <div>
+            <strong>{completedCount}</strong>
+            <span>Received</span>
+          </div>
+        </div>
+      </div>
+
+      {error && (
+        <div className="delivery-alert error">
+          <AlertCircle size={18} />
+          {error}
+        </div>
+      )}
+
+      {success && (
+        <div className="delivery-alert success">
+          <CheckCircle2 size={18} />
+          {success}
+        </div>
+      )}
+
+      <div className="delivery-section-heading">
+        <div>
+          <h2>Your deliveries</h2>
+          <p>All delivery arrangements associated with your resources.</p>
+        </div>
+        <span className="delivery-total">
+          {deliveries.length} total
+        </span>
+      </div>
+
+      {loading ? (
+        <div className="delivery-empty-state">
+          <RefreshCw size={24} className="spinning" />
+          <p>Loading your deliveries...</p>
+        </div>
+      ) : deliveries.length === 0 ? (
+        <div className="delivery-empty-state">
+          <span className="delivery-empty-icon">
+            <Package size={30} />
+          </span>
+          <h3>No deliveries yet</h3>
+          <p>
+            When a requester confirms an accepted offer and creates a
+            delivery arrangement, it will appear here.
+          </p>
+        </div>
+      ) : (
+        <div className="delivery-list">
+          {deliveries.map((delivery) => {
+            const request = delivery.request || {};
+            const requester = delivery.requester || {};
+            const isSelfPickup = delivery.method === "self_pickup";
+            const isArranged = delivery.status === "arranged";
+            const isDispatching = dispatchingId === delivery._id;
+
+            return (
+              <article className="provider-delivery-card" key={delivery._id}>
+                <div className="provider-delivery-card-top">
+                  <div className="provider-delivery-title">
+                    <span className="provider-delivery-package-icon">
+                      <Package size={20} />
+                    </span>
+                    <div>
+                      <h3>{request.title || "Resource request"}</h3>
+                      <span>
+                        Created {formatDate(delivery.createdAt)}
+                      </span>
+                    </div>
+                  </div>
+
+                  <span
+                    className={`delivery-status-badge ${delivery.status}`}
+                  >
+                    {delivery.status.replace("_", " ")}
+                  </span>
+                </div>
+
+                {request.description && (
+                  <p className="provider-delivery-description">
+                    {request.description}
+                  </p>
+                )}
+
+                <div className="provider-delivery-details">
+                  <div className="provider-delivery-detail">
+                    <span>Category</span>
+                    <strong>{request.category || "—"}</strong>
+                  </div>
+
+                  <div className="provider-delivery-detail">
+                    <span>Quantity</span>
+                    <strong>
+                      {request.quantity ?? "—"} {request.unit || ""}
+                    </strong>
+                  </div>
+
+                  <div className="provider-delivery-detail">
+                    <span>Urgency</span>
+                    <strong className="capitalize">
+                      {request.urgency || "—"}
+                    </strong>
+                  </div>
+                </div>
+
+                <div className="provider-delivery-info-grid">
+                  <div className="provider-delivery-info">
+                    <UserRound size={17} />
+                    <div>
+                      <span>Requester</span>
+                      <strong>{requester.name || "Community member"}</strong>
+                      <small>{requester.location || "Location not provided"}</small>
+                    </div>
+                  </div>
+
+                  <div className="provider-delivery-info">
+                    <MapPin size={17} />
+                    <div>
+                      <span>
+                        {isSelfPickup ? "Pickup address" : "Delivery address"}
+                      </span>
+                      <strong>
+                        {isSelfPickup
+                          ? delivery.pickupAddress || "Not provided"
+                          : delivery.deliveryAddress || "Not provided"}
+                      </strong>
+                    </div>
+                  </div>
+
+                  <div className="provider-delivery-info">
+                    <Truck size={17} />
+                    <div>
+                      <span>Fulfilment method</span>
+                      <strong>
+                        {isSelfPickup ? "Self pickup" : "Community delivery"}
+                      </strong>
+                      {delivery.transportDetails && (
+                        <small>{delivery.transportDetails}</small>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="provider-delivery-info">
+                    <Package size={17} />
+                    <div>
+                      <span>Quoted transportation cost</span>
+                      <strong>
+                        {delivery.costCurrency === "INR" || !delivery.costCurrency
+                          ? "₹"
+                          : `${delivery.costCurrency} `}
+                        {Number(delivery.quotedCost || 0).toLocaleString("en-IN")}
+                      </strong>
+                    </div>
+                  </div>
+                </div>
+
+                {delivery.dispatchedAt && (
+                  <div className="delivery-dispatched-date">
+                    <CheckCircle2 size={15} />
+                    Dispatched on {formatDate(delivery.dispatchedAt)}
+                  </div>
+                )}
+
+                <div className="provider-delivery-card-footer">
+                  <span>
+                    {isArranged
+                      ? "This arrangement is ready for dispatch."
+                      : delivery.status === "dispatched"
+                      ? "The resource has been dispatched. Awaiting requester confirmation."
+                      : delivery.status === "received"
+                      ? "The requester has confirmed receipt."
+                      : delivery.status === "cancelled"
+                      ? "This delivery arrangement was cancelled."
+                      : `Current status: ${delivery.status}`}
+                  </span>
+
+                  {isArranged && (
+                    <button
+                      className="delivery-dispatch-btn"
+                      onClick={() => handleDispatch(delivery._id)}
+                      disabled={isDispatching}
+                    >
+                      <Truck size={17} />
+                      {isDispatching ? "Updating..." : "Mark as dispatched"}
+                    </button>
+                  )}
+                </div>
+              </article>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
