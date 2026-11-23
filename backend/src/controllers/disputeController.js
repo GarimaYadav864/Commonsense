@@ -1,8 +1,13 @@
 const mongoose = require("mongoose");
 const Delivery = require("../models/Delivery");
+const DisputeEvent = require("../models/DisputeEvent");
 const { createNotification, notifyAdmins } = require("../services/notificationService");
 
 const validId = (id) => mongoose.Types.ObjectId.isValid(id);
+
+const recordDisputeEvent = async ({ delivery, actor, actorRole, eventType, status, message = "", decision = null }) => {
+  return DisputeEvent.create({ delivery, actor, actorRole, eventType, status, message, decision });
+};
 const populated = (query) => query
   .populate("request", "title category quantity unit")
   .populate("provider", "name")
@@ -34,6 +39,8 @@ const openDamageDispute = async (req, res) => {
 
     if (!delivery) return res.status(409).json({ success: false, message: "A dispute can only be opened once for a delivery when its saved arrival report is damaged or missing." });
 
+    await recordDisputeEvent({ delivery: delivery._id, actor: req.user._id, actorRole: "requester", eventType: "dispute_opened", status: "open", message: description.trim() });
+    await recordDisputeEvent({ delivery: delivery._id, actor: req.user._id, actorRole: "provider", eventType: "provider_responded", status: "provider_responded", message: message.trim() });
     const io = req.app.get("io");
     await Promise.allSettled([
       createNotification({ io, recipient: delivery.provider, type: "damage_dispute_opened", title: "A delivery dispute was opened", message: "The requester reported a damaged or missing resource. Please review and respond.", relatedId: delivery._id, relatedModel: "Delivery" }),
@@ -112,6 +119,7 @@ const resolveDamageDispute = async (req, res) => {
       },
     }, { new: true, runValidators: true });
     if (!delivery) return res.status(409).json({ success: false, message: "This dispute is already resolved or does not exist." });
+    await recordDisputeEvent({ delivery: delivery._id, actor: req.user._id, actorRole: "admin", eventType: decision === "no_action" ? "dispute_rejected" : "dispute_resolved", status: decision === "no_action" ? "rejected" : "resolved", message: notes.trim(), decision });
     const io = req.app.get("io");
     const notice = { type: "damage_dispute_updated", title: "Delivery dispute resolved", message: "An admin has recorded a resolution for your delivery dispute.", relatedId: delivery._id, relatedModel: "Delivery" };
     await Promise.allSettled([
@@ -126,4 +134,20 @@ const resolveDamageDispute = async (req, res) => {
   }
 };
 
-module.exports = { openDamageDispute, respondToDamageDispute, getDamageDisputes, resolveDamageDispute };
+
+const getDisputeHistory = async (req, res) => {
+  try {
+    if (!validId(req.params.id)) return res.status(400).json({ success: false, message: "Invalid delivery ID" });
+    const delivery = await Delivery.findById(req.params.id).select("requester provider");
+    if (!delivery) return res.status(404).json({ success: false, message: "Delivery not found" });
+    const isParty = [delivery.requester.toString(), delivery.provider.toString()].includes(req.user._id.toString());
+    if (!isParty && req.user.role !== "admin") return res.status(403).json({ success: false, message: "You are not allowed to view this dispute history" });
+    const events = await DisputeEvent.find({ delivery: delivery._id }).populate("actor", "name role").sort({ createdAt: 1 });
+    return res.status(200).json({ success: true, events });
+  } catch (error) {
+    console.error("Get dispute history error:", error);
+    return res.status(500).json({ success: false, message: "Unable to load dispute history" });
+  }
+};
+
+module.exports = { openDamageDispute, respondToDamageDispute, getDamageDisputes, resolveDamageDispute, getDisputeHistory };
