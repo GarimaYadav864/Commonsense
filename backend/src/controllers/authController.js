@@ -138,10 +138,24 @@ const registerUser = async (req, res) => {
 
 const loginUser = async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const { email, password } = req.body || {};
 
-    // 1. Validate input
-    if (!email || !password) {
+    // Check JWT configuration before performing authentication.
+    if (!process.env.JWT_SECRET || process.env.JWT_SECRET.trim().length < 32) {
+      console.error("Login unavailable: JWT_SECRET is missing or too short.");
+      return res.status(503).json({
+        success: false,
+        message: "Login is temporarily unavailable. Please try again later.",
+      });
+    }
+
+    // Validate input types before normalizing values.
+    if (
+      typeof email !== "string" ||
+      typeof password !== "string" ||
+      !email.trim() ||
+      !password
+    ) {
       return res.status(400).json({
         success: false,
         message: "Email and password are required",
