@@ -14,6 +14,7 @@ import {
 
 import api from "../../services/api";
 import "./RequesterDashboard.css";
+import CommunityRequestsPanel from "../../components/community/CommunityRequestsPanel";
 
 interface CommunityRequest {
   _id: string;
@@ -154,6 +155,8 @@ function RequesterDashboard() {
           </article>
         ))}
       </section>
+
+      <CommunityRequestsPanel />
 
       <section className="dashboard-main-grid">
         <article className="dashboard-panel recent-requests-panel">
