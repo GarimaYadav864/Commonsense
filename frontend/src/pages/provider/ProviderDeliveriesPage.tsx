@@ -425,7 +425,7 @@ export default function ProviderDeliveriesPage() {
                   </div>
                 )}
                 {delivery.dispatchConditionReport && (
-                  <div className="condition-report-saved"><strong>Pre-dispatch condition: {delivery.dispatchConditionReport.condition}</strong><span>{delivery.dispatchConditionReport.notes || "No additional notes"}</span><small>Recorded {formatDate(delivery.dispatchConditionReport.reportedAt)} · {delivery.dispatchConditionReport.photos.length} photo(s)</small></div>
+                  <div className="condition-report-saved"><strong>Pre-dispatch condition: {delivery.dispatchConditionReport.condition}</strong><span>{delivery.dispatchConditionReport.notes || "No additional notes"}</span><small>Recorded {formatDate(delivery.dispatchConditionReport.reportedAt)} · {delivery.dispatchConditionReport.photos.length} photo(s)</small><div className="condition-report-photos">{delivery.dispatchConditionReport.photos.map((photo, index) => <img key={index} src={photo} alt={`Pre-dispatch evidence ${index + 1}`} />)}</div></div>
                 )}
                 <div className="provider-delivery-card-footer">
                   <span>
