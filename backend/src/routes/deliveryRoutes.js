@@ -4,6 +4,7 @@ const router = express.Router();
 
 const {
   createDelivery,
+  quoteDelivery,
   getMyDeliveries,
   getAvailableDeliveries,
   claimDelivery,
@@ -17,6 +18,8 @@ const { protect } = require("../middleware/authMiddleware");
 const { authorizeRoles } = require("../middleware/roleMiddleware");
 
 router.use(protect);
+
+router.post("/quote", authorizeRoles("requester"), quoteDelivery);
 
 // Requester creates a delivery arrangement
 router.post(
