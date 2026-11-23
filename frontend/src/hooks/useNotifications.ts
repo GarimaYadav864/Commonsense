@@ -155,14 +155,14 @@ export function useNotifications() {
     setActionError("");
     try {
       await api.patch(`/notifications/${id}/read`);
-      let wasUnread = false;
+      const wasUnread = notifications.some(
+        (item) => item._id === id && !item.isRead
+      );
 
       setNotifications((previous) =>
-        previous.map((item) => {
-          if (item._id !== id) return item;
-          wasUnread = !item.isRead;
-          return { ...item, isRead: true };
-        })
+        previous.map((item) =>
+          item._id === id ? { ...item, isRead: true } : item
+        )
       );
 
       if (wasUnread) {
@@ -192,13 +192,13 @@ export function useNotifications() {
     setActionError("");
     try {
       await api.delete(`/notifications/${id}`);
-      let wasUnread = false;
+      const wasUnread = notifications.some(
+        (item) => item._id === id && !item.isRead
+      );
 
-      setNotifications((previous) => {
-        const target = previous.find((item) => item._id === id);
-        wasUnread = Boolean(target && !target.isRead);
-        return previous.filter((item) => item._id !== id);
-      });
+      setNotifications((previous) =>
+        previous.filter((item) => item._id !== id)
+      );
 
       knownNotificationIds.current.delete(id);
       if (wasUnread) {
