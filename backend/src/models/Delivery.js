@@ -79,6 +79,7 @@ const deliverySchema = new mongoose.Schema(
       enum: [
         "arranged",
         "dispatched",
+        "in_transit",
         "delivered",
         "received",
         "cancelled",
