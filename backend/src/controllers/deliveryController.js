@@ -8,6 +8,42 @@ const {
   createNotification,
 } = require("../services/notificationService");
 
+const DELIVERY_BASE_FARE_INR = 20;
+const DELIVERY_RATE_PER_KM_INR = 8;
+const ROAD_DISTANCE_FACTOR = 1.25;
+
+const calculateDeliveryQuote = (resource, request) => {
+  const values = [resource && resource.latitude, resource && resource.longitude, request && request.latitude, request && request.longitude];
+  if (!values.every(Number.isFinite)) {
+    const error = new Error("GPS coordinates are missing for the provider or requester. Save both locations before calculating delivery charges.");
+    error.code = "DELIVERY_COORDINATES_MISSING";
+    throw error;
+  }
+  const rad = (value) => value * Math.PI / 180;
+  const lat1 = rad(resource.latitude);
+  const lat2 = rad(request.latitude);
+  const dLat = rad(request.latitude - resource.latitude);
+  const dLon = rad(request.longitude - resource.longitude);
+  const a = Math.sin(dLat / 2) ** 2 + Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLon / 2) ** 2;
+  const straightLineKm = 6371 * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  const distanceKm = Math.round(straightLineKm * ROAD_DISTANCE_FACTOR * 10) / 10;
+  const distanceCharge = distanceKm * DELIVERY_RATE_PER_KM_INR;
+  return { straightLineKm: Math.round(straightLineKm * 10) / 10, distanceKm, baseFare: DELIVERY_BASE_FARE_INR, ratePerKm: DELIVERY_RATE_PER_KM_INR, distanceCharge: Math.round(distanceCharge * 100) / 100, roadDistanceFactor: ROAD_DISTANCE_FACTOR, quotedCost: Math.max(DELIVERY_BASE_FARE_INR, Math.round(DELIVERY_BASE_FARE_INR + distanceCharge)), costCurrency: "INR", pricingMethod: "gps_estimate" };
+};
+
+const quoteDelivery = async (req, res) => {
+  try {
+    const offerId = req.body.offerId;
+    if (!offerId || !mongoose.Types.ObjectId.isValid(offerId)) return res.status(400).json({ success: false, message: "A valid offer ID is required" });
+    const offer = await Offer.findOne({ _id: offerId, requester: req.user._id, status: "accepted", requesterConfirmed: true }).populate("resource").populate("request");
+    if (!offer) return res.status(404).json({ success: false, message: "Confirmed accepted offer not found" });
+    return res.status(200).json({ success: true, quote: calculateDeliveryQuote(offer.resource, offer.request) });
+  } catch (error) {
+    if (error.code === "DELIVERY_COORDINATES_MISSING") return res.status(422).json({ success: false, message: error.message });
+    console.error("Delivery quote error:", error);
+    return res.status(500).json({ success: false, message: "Unable to calculate delivery estimate" });
+  }
+};
 // CREATE DELIVERY ARRANGEMENT
 
 const createDelivery = async (req, res) => {
@@ -20,7 +56,6 @@ const createDelivery = async (req, res) => {
       pickupAddress,
       deliveryAddress,
       transportDetails,
-      quotedCost,
     } = req.body;
 
     // Validate required fields.
@@ -42,16 +77,6 @@ const createDelivery = async (req, res) => {
       return res.status(400).json({
         success: false,
         message: "Invalid delivery method",
-      });
-    }
-
-    if (
-      quotedCost !== undefined &&
-      (!Number.isFinite(quotedCost) || quotedCost < 0)
-    ) {
-      return res.status(400).json({
-        success: false,
-        message: "Invalid transportation cost",
       });
     }
 
@@ -105,7 +130,7 @@ const createDelivery = async (req, res) => {
         requester: req.user._id,
         status: "accepted",
         requesterConfirmed: true,
-      }).session(session);
+      }).populate("resource").populate("request").session(session);
 
       if (!offer) {
         throw new Error("CONFIRMED_OFFER_NOT_FOUND");
@@ -119,6 +144,8 @@ const createDelivery = async (req, res) => {
       if (existingDelivery) {
         throw new Error("DELIVERY_ALREADY_EXISTS");
       }
+
+      const deliveryQuote = method === "community_delivery" ? calculateDeliveryQuote(offer.resource, offer.request) : { quotedCost: 0, pricingMethod: "self_pickup" };
 
       const deliveries = await Delivery.create(
         [
@@ -137,10 +164,16 @@ const createDelivery = async (req, res) => {
                 ? cleanDeliveryAddress
                 : undefined,
             transportDetails: transportDetails?.trim() || undefined,
-            quotedCost:
-              method === "community_delivery"
-                ? quotedCost ?? 0
-                : 0,
+            quotedCost: deliveryQuote.quotedCost,
+            distanceKm: deliveryQuote.distanceKm,
+            pricingMethod: deliveryQuote.pricingMethod,
+            costBreakdown: method === "community_delivery" ? {
+              baseFare: deliveryQuote.baseFare,
+              ratePerKm: deliveryQuote.ratePerKm,
+              distanceCharge: deliveryQuote.distanceCharge,
+              straightLineKm: deliveryQuote.straightLineKm,
+              roadDistanceFactor: deliveryQuote.roadDistanceFactor,
+            } : undefined,
           },
         ],
         { session }
@@ -171,6 +204,8 @@ const createDelivery = async (req, res) => {
     });
   } catch (error) {
     console.error("Create delivery error:", error);
+
+    if (error.code === "DELIVERY_COORDINATES_MISSING") return res.status(422).json({ success: false, message: error.message });
 
     if (error.message === "CONFIRMED_OFFER_NOT_FOUND") {
       return res.status(404).json({
