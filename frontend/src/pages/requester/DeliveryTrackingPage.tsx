@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import api from "../../services/api";
 import DeliveryPaymentPanel from "../../components/payments/DeliveryPaymentPanel";
+import { compressConditionPhoto } from "../../utils/conditionEvidence";
 import "./DeliveryTrackingPage.css";
 
 type DeliveryStatus =
@@ -32,6 +33,8 @@ interface Delivery {
   dispatchedAt?: string;
   deliveredAt?: string;
   receivedAt?: string;
+  dispatchConditionReport?: { condition: string; notes: string; photos: string[]; reportedAt: string } | null;
+  receiptConditionReport?: { condition: string; notes: string; photos: string[]; reportedAt: string } | null;
   volunteerLocation?: { latitude?: number | null; longitude?: number | null; updatedAt?: string | null };
   request?: {
     title: string;
@@ -65,6 +68,7 @@ function DeliveryTrackingPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [processingId, setProcessingId] = useState<string | null>(null);
+  const [conditionDrafts, setConditionDrafts] = useState<Record<string, { condition: string; notes: string; photos: string[] }>>({});
 
   const fetchDeliveries = useCallback(async () => {
     try {
@@ -119,6 +123,29 @@ function DeliveryTrackingPage() {
     }
   };
 
+  const updateConditionDraft = (id: string, patch: Partial<{ condition: string; notes: string; photos: string[] }>) => {
+    setConditionDrafts((current) => ({ ...current, [id]: { condition: "good", notes: "", photos: [], ...current[id], ...patch } }));
+  };
+
+  const addConditionPhotos = async (id: string, files: FileList | null) => {
+    if (!files?.length) return;
+    try {
+      const current = conditionDrafts[id]?.photos || [];
+      if (current.length + files.length > 3) throw new Error("You can attach up to 3 photos.");
+      const photos = await Promise.all(Array.from(files).map(compressConditionPhoto));
+      updateConditionDraft(id, { photos: [...current, ...photos] });
+    } catch (error: any) { setError(error.message || "Unable to process photos."); }
+  };
+
+  const submitReceiptCondition = async (id: string) => {
+    const draft = conditionDrafts[id] || { condition: "good", notes: "", photos: [] };
+    try {
+      setProcessingId(id); setError("");
+      await api.post(`/deliveries/${id}/condition-report`, { stage: "receipt", ...draft });
+      await fetchDeliveries();
+    } catch (error: any) { setError(error?.response?.data?.message || "Unable to save arrival condition report."); }
+    finally { setProcessingId(null); }
+  };
   const formatDate = (date?: string) => {
     if (!date) return "Not yet updated";
 
@@ -330,6 +357,32 @@ function DeliveryTrackingPage() {
                     <a href={`https://www.google.com/maps?q=${delivery.volunteerLocation.latitude},${delivery.volunteerLocation.longitude}`} target="_blank" rel="noreferrer">View latest position</a>
                   </div>
                 )}
+                <div className="condition-report-comparison">
+                  <h4>Handover condition evidence</h4>
+                  {delivery.dispatchConditionReport ? (
+                    <div className="condition-report-saved"><strong>Before dispatch: {delivery.dispatchConditionReport.condition}</strong><span>{delivery.dispatchConditionReport.notes || "No additional notes"}</span><small>{delivery.dispatchConditionReport.photos.length} photo(s) · {formatDate(delivery.dispatchConditionReport.reportedAt)}</small></div>
+                  ) : <p>Provider has not submitted pre-dispatch evidence yet.</p>}
+                  {delivery.receiptConditionReport ? (
+                    <div className="condition-report-saved"><strong>On arrival: {delivery.receiptConditionReport.condition}</strong><span>{delivery.receiptConditionReport.notes || "No additional notes"}</span><small>{delivery.receiptConditionReport.photos.length} photo(s) · {formatDate(delivery.receiptConditionReport.reportedAt)}</small></div>
+                  ) : (
+                    <div className="condition-report-panel">
+                      <h5>Record condition on arrival</h5>
+                      <label>Condition
+                        <select value={conditionDrafts[delivery._id]?.condition || "good"} onChange={(event) => updateConditionDraft(delivery._id, { condition: event.target.value })}>
+                          <option value="good">Good</option><option value="fair">Fair</option><option value="damaged">Damaged</option><option value="missing">Missing / incomplete</option>
+                        </select>
+                      </label>
+                      <label>Notes
+                        <textarea maxLength={1000} value={conditionDrafts[delivery._id]?.notes || ""} onChange={(event) => updateConditionDraft(delivery._id, { notes: event.target.value })} placeholder="Describe the condition or any damage noticed" />
+                      </label>
+                      <label>Photos (up to 3)
+                        <input type="file" accept="image/jpeg,image/png,image/webp" multiple onChange={(event) => { void addConditionPhotos(delivery._id, event.target.files); event.currentTarget.value = ""; }} />
+                      </label>
+                      <small>{conditionDrafts[delivery._id]?.photos.length || 0}/3 photos attached. Photos are compressed before upload.</small>
+                      <button type="button" className="condition-report-submit" disabled={processingId === delivery._id || !["dispatched", "in_transit", "delivered"].includes(delivery.status)} onClick={() => submitReceiptCondition(delivery._id)}>{processingId === delivery._id ? "Saving..." : "Save arrival condition"}</button>
+                    </div>
+                  )}
+                </div>
                 <DeliveryPaymentPanel
                   deliveryId={delivery._id}
                   method={delivery.method}
