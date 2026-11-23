@@ -63,10 +63,22 @@ const deliverySchema = new mongoose.Schema(
       maxlength: 500,
     },
 
-    quotedCost: {
-      type: Number,
-      default: 0,
-      min: 0,
+    quotedCost: { type: Number, default: 0, min: 0 },
+
+    distanceKm: { type: Number, min: 0, default: null },
+
+    pricingMethod: {
+      type: String,
+      enum: ["gps_estimate", "self_pickup", "manual"],
+      default: "self_pickup",
+    },
+
+    costBreakdown: {
+      baseFare: { type: Number, min: 0 },
+      ratePerKm: { type: Number, min: 0 },
+      distanceCharge: { type: Number, min: 0 },
+      straightLineKm: { type: Number, min: 0 },
+      roadDistanceFactor: { type: Number, min: 1 },
     },
 
     costCurrency: {
