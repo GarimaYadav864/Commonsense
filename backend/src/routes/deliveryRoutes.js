@@ -15,7 +15,7 @@ const {
   confirmReceipt,
 } = require("../controllers/deliveryController");
 
-const { openDamageDispute, respondToDamageDispute } = require("../controllers/disputeController");
+const { openDamageDispute, respondToDamageDispute, getDisputeHistory } = require("../controllers/disputeController");
 
 const { protect } = require("../middleware/authMiddleware");
 const { authorizeRoles } = require("../middleware/roleMiddleware");
@@ -63,6 +63,7 @@ router.patch("/:id/location", authorizeRoles("volunteer"), updateVolunteerLocati
 router.post("/:id/condition-report", authorizeRoles("provider", "requester"), submitConditionReport);
 router.post("/:id/disputes", authorizeRoles("requester"), openDamageDispute);
 router.post("/:id/disputes/respond", authorizeRoles("provider"), respondToDamageDispute);
+router.get("/:id/disputes/history", authorizeRoles("requester", "provider", "admin"), getDisputeHistory);
 
 // Provider dispatches the resource
 router.patch(
