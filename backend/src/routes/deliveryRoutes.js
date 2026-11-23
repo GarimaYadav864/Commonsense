@@ -17,6 +17,7 @@ const {
 
 const { openDamageDispute, respondToDamageDispute, getDisputeHistory } = require("../controllers/disputeController");
 const { createDeliveryReview, getUserReputation } = require("../controllers/reviewController");
+const { createVolunteerReview, getVolunteerReputation } = require("../controllers/volunteerReviewController");
 
 const { protect } = require("../middleware/authMiddleware");
 const { authorizeRoles } = require("../middleware/roleMiddleware");
@@ -63,6 +64,8 @@ router.patch(
 router.patch("/:id/location", authorizeRoles("volunteer"), updateVolunteerLocation);
 router.post("/:id/condition-report", authorizeRoles("provider", "requester"), submitConditionReport);
 router.post("/:id/review", authorizeRoles("requester"), createDeliveryReview);
+router.post("/:id/volunteer-review", authorizeRoles("requester"), createVolunteerReview);
+router.get("/volunteer-reputation/:userId", getVolunteerReputation);
 router.get("/reputation/:userId", getUserReputation);
 router.post("/:id/disputes", authorizeRoles("requester"), openDamageDispute);
 router.post("/:id/disputes/respond", authorizeRoles("provider"), respondToDamageDispute);
