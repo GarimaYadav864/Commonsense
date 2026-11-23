@@ -255,3 +255,33 @@
     font-size: 27px;
   }
 }
+
+
+.volunteer-status-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 14px;
+}
+.volunteer-progress-btn {
+  border: 0;
+  border-radius: 8px;
+  padding: 10px 14px;
+  background: #031f1b;
+  color: #fff;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.volunteer-progress-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+.volunteer-delivered-note {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  color: #286b50;
+  font-size: 13px;
+}
