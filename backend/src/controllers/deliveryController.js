@@ -600,7 +600,7 @@ const submitConditionReport = async (req, res) => {
     if (!mongoose.Types.ObjectId.isValid(req.params.id)) return res.status(400).json({ success: false, message: "Invalid delivery ID" });
     if (!["dispatch", "receipt"].includes(stage) || !["good", "fair", "damaged", "missing"].includes(condition)) return res.status(400).json({ success: false, message: "Choose a valid report stage and condition" });
     if (typeof notes !== "string" || notes.length > 1000 || !Array.isArray(photos) || photos.length > 3) return res.status(400).json({ success: false, message: "Notes must be under 1000 characters and up to 3 photos are allowed" });
-    const validPhotos = photos.every((photo) => typeof photo === "string" && photo.length <= 500000 && /^data:image\\/(jpeg|png|webp);base64,[A-Za-z0-9+/]+=*$/.test(photo));
+    const validPhotos = photos.every((photo) => typeof photo === "string" && photo.length <= 500000 && (photo.startsWith("data:image/jpeg;base64,") || photo.startsWith("data:image/png;base64,") || photo.startsWith("data:image/webp;base64,")) && /^[A-Za-z0-9+/=]+$/.test(photo.split(",")[1] || ""));
     if (!validPhotos) return res.status(400).json({ success: false, message: "Each photo must be a JPEG, PNG or WebP image under 350 KB" });
     const isProvider = stage === "dispatch" && req.user.role === "provider";
     const isRequester = stage === "receipt" && req.user.role === "requester";
