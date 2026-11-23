@@ -7,17 +7,42 @@ const { sendPasswordResetEmail } = require("../services/emailService");
 
 const registerUser = async (req, res) => {
   try {
-    const { name, email, password, location, role } = req.body;
+    const { name, email, password, location, role } = req.body || {};
 
-    // 1. Validate required fields
-    if (!name || !email || !password || !location) {
+    // Check configuration before writing a new account to the database.
+    if (!process.env.JWT_SECRET || process.env.JWT_SECRET.trim().length < 32) {
+      console.error("Registration unavailable: JWT_SECRET is missing or too short.");
+      return res.status(503).json({
+        success: false,
+        message: "Registration is temporarily unavailable. Please try again later.",
+      });
+    }
+
+    // Validate input types before calling string methods.
+    if (
+      typeof name !== "string" ||
+      typeof email !== "string" ||
+      typeof password !== "string" ||
+      typeof location !== "string" ||
+      !name.trim() ||
+      !email.trim() ||
+      !password ||
+      !location.trim()
+    ) {
       return res.status(400).json({
         success: false,
         message: "Please provide all required fields",
       });
     }
 
-    // 2. Validate password length
+    // 2. Validate name and password length
+    if (name.trim().length < 2 || name.trim().length > 50) {
+      return res.status(400).json({
+        success: false,
+        message: "Name must be between 2 and 50 characters",
+      });
+    }
+
     if (password.length < 8) {
       return res.status(400).json({
         success: false,
@@ -94,6 +119,13 @@ const registerUser = async (req, res) => {
       },
     });
   } catch (error) {
+    if (error.code === 11000) {
+      return res.status(409).json({
+        success: false,
+        message: "An account with this email already exists",
+      });
+    }
+
     console.error("Registration error:", error);
 
     return res.status(500).json({
