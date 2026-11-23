@@ -178,7 +178,7 @@ const loginUser = async (req, res) => {
 const forgotPassword = async (req, res) => {
   try {
     const { email } = req.body;
-    if (!email || !/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email.trim())) {
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
       return res.status(400).json({ success: false, message: "Please provide a valid email address" });
     }
 
@@ -196,7 +196,7 @@ const forgotPassword = async (req, res) => {
       user.resetPasswordExpires = new Date(Date.now() + 15 * 60 * 1000);
       await user.save();
 
-      const resetUrl = `${process.env.FRONTEND_URL.replace(/\\/$/, "")}/reset-password?token=${rawToken}`;
+      const resetUrl = `${process.env.FRONTEND_URL.replace(/\/$/, "")}/reset-password?token=${rawToken}`;
       try {
         await sendPasswordResetEmail({ to: user.email, resetUrl });
       } catch (emailError) {
