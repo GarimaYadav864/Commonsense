@@ -285,3 +285,7 @@
   color: #286b50;
   font-size: 13px;
 }
+
+.volunteer-location-sharing{margin-top:14px;padding:13px;border-radius:9px;background:#eef4ed}
+.volunteer-location-sharing p{margin-bottom:10px;color:#405b49;font-size:12px;line-height:1.5}
+.volunteer-progress-btn.secondary{background:#68766c}
