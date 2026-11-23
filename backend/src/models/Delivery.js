@@ -9,6 +9,25 @@ const conditionEvidenceSchema = new mongoose.Schema({
   reportedAt: { type: Date, default: Date.now },
 }, { _id: false });
 
+
+const disputeSchema = new mongoose.Schema({
+  status: { type: String, enum: ["open", "provider_responded", "resolved", "rejected"], default: "open" },
+  reason: { type: String, enum: ["damaged", "missing"], required: true },
+  description: { type: String, trim: true, maxlength: 1500, required: true },
+  openedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+  openedAt: { type: Date, default: Date.now },
+  providerResponse: {
+    message: { type: String, trim: true, maxlength: 1500 },
+    respondedAt: { type: Date, default: null },
+  },
+  resolution: {
+    decision: { type: String, enum: ["replacement", "partial_resolution", "no_action", "other"] },
+    notes: { type: String, trim: true, maxlength: 1500 },
+    resolvedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+    resolvedAt: { type: Date, default: null },
+  },
+}, { _id: false });
+
 const deliverySchema = new mongoose.Schema(
   {
     offer: {
@@ -130,6 +149,8 @@ const deliverySchema = new mongoose.Schema(
     dispatchConditionReport: { type: conditionEvidenceSchema, default: null },
 
     receiptConditionReport: { type: conditionEvidenceSchema, default: null },
+
+    damageDispute: { type: disputeSchema, default: null },
 
     volunteerLocation: {
       latitude: { type: Number, min: -90, max: 90, default: null },
