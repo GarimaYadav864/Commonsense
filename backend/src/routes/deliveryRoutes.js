@@ -8,6 +8,7 @@ const {
   getAvailableDeliveries,
   claimDelivery,
   markDispatched,
+  updateVolunteerDeliveryStatus,
   confirmReceipt,
 } = require("../controllers/deliveryController");
 
@@ -42,6 +43,13 @@ router.patch(
   "/:id/claim",
   authorizeRoles("volunteer"),
   claimDelivery
+);
+
+// Assigned volunteer updates delivery progress
+router.patch(
+  "/:id/status",
+  authorizeRoles("volunteer"),
+  updateVolunteerDeliveryStatus
 );
 
 // Provider dispatches the resource
