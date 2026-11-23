@@ -108,7 +108,6 @@ export default function DeliveryPaymentPanel({
     setError("");
     setMessage("");
     try {
-      setLoadingType(type);
       const isContribution = type === "provider_contribution";
       const amount = Number(contribution);
       if (isContribution && (!Number.isFinite(amount) || amount < 1 || amount > 10000)) {
@@ -116,9 +115,11 @@ export default function DeliveryPaymentPanel({
         return;
       }
 
+      setLoadingType(type);
       const loaded = await loadRazorpay();
       if (!loaded || !window.Razorpay) {
         setError("Unable to load Razorpay Checkout. Check your internet connection.");
+        setLoadingType(null);
         return;
       }
 
