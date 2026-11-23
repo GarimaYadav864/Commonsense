@@ -7,6 +7,7 @@ interface Delivery {
   _id: string;
   method: "self_pickup" | "community_delivery";
   status: string;
+  deliveredAt?: string;
   deliveryAddress?: string;
   pickupAddress?: string;
   transportDetails?: string;
@@ -38,6 +39,7 @@ function VolunteerDeliveriesPage() {
   const [assigned, setAssigned] = useState<Delivery[]>([]);
   const [loading, setLoading] = useState(true);
   const [claimingId, setClaimingId] = useState<string | null>(null);
+  const [updatingId, setUpdatingId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<"available" | "assigned">(
     "available"
   );
@@ -90,6 +92,24 @@ function VolunteerDeliveriesPage() {
       await fetchDeliveries();
     } finally {
       setClaimingId(null);
+    }
+  };
+
+ 
+  const handleStatusUpdate = async (
+    deliveryId: string,
+    status: "in_transit" | "delivered"
+  ) => {
+    try {
+      setUpdatingId(deliveryId);
+      setMessage("");
+      const response = await api.patch(`/deliveries/${deliveryId}/status`, { status });
+      setMessage(response.data.message || "Delivery status updated.");
+      await fetchDeliveries();
+    } catch (error: any) {
+      setMessage(error.response?.data?.message || "Unable to update delivery status.");
+    } finally {
+      setUpdatingId(null);
     }
   };
 
@@ -183,9 +203,35 @@ function VolunteerDeliveriesPage() {
             </p>
           )}
 
+
+          <div className="volunteer-status-actions">
+            {delivery.status === "dispatched" && (
+              <button
+                className="volunteer-progress-btn"
+                onClick={() => handleStatusUpdate(delivery._id, "in_transit")}
+                disabled={updatingId === delivery._id}
+              >
+                {updatingId === delivery._id ? "Updating..." : "Mark in transit"}
+              </button>
+            )}
+            {delivery.status === "in_transit" && (
+              <button
+                className="volunteer-progress-btn"
+                onClick={() => handleStatusUpdate(delivery._id, "delivered")}
+                disabled={updatingId === delivery._id}
+              >
+                {updatingId === delivery._id ? "Updating..." : "Mark delivered"}
+              </button>
+            )}
+            {delivery.status === "delivered" && (
+              <p className="volunteer-delivered-note">
+                <CheckCircle size={16} /> Awaiting requester receipt confirmation
+              </p>
+            )}
+          </div>
           <div className="volunteer-flow-note">
             <CheckCircle size={16} />
-            The provider handles dispatch, and the requester confirms receipt.
+            The provider dispatches the resource. You update its journey, and the requester confirms receipt.
           </div>
         </div>
       )}
