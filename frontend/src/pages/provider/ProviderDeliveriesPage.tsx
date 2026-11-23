@@ -12,6 +12,7 @@ import {
   UserRound,
 } from "lucide-react";
 import api from "../../services/api";
+import { compressConditionPhoto } from "../../utils/conditionEvidence";
 import "./ProviderDeliveriesPage.css";
 
 type DeliveryStatus =
@@ -38,6 +39,7 @@ interface Delivery {
   quotedCost: number;
   costCurrency?: string;
   status: DeliveryStatus;
+  dispatchConditionReport?: { condition: string; notes: string; photos: string[]; reportedAt: string } | null;
   dispatchedAt?: string | null;
   createdAt: string;
   request?: {
@@ -83,6 +85,8 @@ export default function ProviderDeliveriesPage() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [contributions, setContributions] = useState<ProviderContribution[]>([]);
+  const [conditionDrafts, setConditionDrafts] = useState<Record<string, { condition: string; notes: string; photos: string[] }>>({});
+  const [reportingId, setReportingId] = useState<string | null>(null);
 
   const fetchDeliveries = useCallback(async () => {
     try {
@@ -136,6 +140,30 @@ export default function ProviderDeliveriesPage() {
     }
   };
 
+  const updateConditionDraft = (id: string, patch: Partial<{ condition: string; notes: string; photos: string[] }>) => {
+    setConditionDrafts((current) => ({ ...current, [id]: { condition: "good", notes: "", photos: [], ...current[id], ...patch } }));
+  };
+
+  const addConditionPhotos = async (id: string, files: FileList | null) => {
+    if (!files?.length) return;
+    try {
+      const current = conditionDrafts[id]?.photos || [];
+      if (current.length + files.length > 3) throw new Error("You can attach up to 3 photos.");
+      const photos = await Promise.all(Array.from(files).map(compressConditionPhoto));
+      updateConditionDraft(id, { photos: [...current, ...photos] });
+    } catch (error: any) { setError(error.message || "Unable to process photos."); }
+  };
+
+  const submitDispatchCondition = async (id: string) => {
+    const draft = conditionDrafts[id] || { condition: "good", notes: "", photos: [] };
+    try {
+      setReportingId(id); setError("");
+      await api.post(`/deliveries/${id}/condition-report`, { stage: "dispatch", ...draft });
+      setSuccess("Pre-dispatch condition report saved.");
+      await fetchDeliveries();
+    } catch (error) { setError(getErrorMessage(error)); }
+    finally { setReportingId(null); }
+  };
   const pendingCount = deliveries.filter(
     (item) => item.status === "arranged"
   ).length;
@@ -377,6 +405,28 @@ export default function ProviderDeliveriesPage() {
                   ) : null;
                 })()}
 
+                {isArranged && !delivery.dispatchConditionReport && (
+                  <div className="condition-report-panel">
+                    <h4>Before-dispatch condition check</h4>
+                    <p>Record the resource condition and attach up to 3 photos before handing it over.</p>
+                    <label>Condition
+                      <select value={conditionDrafts[delivery._id]?.condition || "good"} onChange={(event) => updateConditionDraft(delivery._id, { condition: event.target.value })}>
+                        <option value="good">Good</option><option value="fair">Fair</option><option value="damaged">Damaged</option><option value="missing">Missing / incomplete</option>
+                      </select>
+                    </label>
+                    <label>Notes
+                      <textarea maxLength={1000} value={conditionDrafts[delivery._id]?.notes || ""} onChange={(event) => updateConditionDraft(delivery._id, { notes: event.target.value })} placeholder="Describe visible condition, defects or included items" />
+                    </label>
+                    <label>Photos (up to 3, compressed before upload)
+                      <input type="file" accept="image/jpeg,image/png,image/webp" multiple onChange={(event) => { void addConditionPhotos(delivery._id, event.target.files); event.currentTarget.value = ""; }} />
+                    </label>
+                    <small>{conditionDrafts[delivery._id]?.photos.length || 0}/3 photos attached</small>
+                    <button type="button" className="condition-report-submit" disabled={reportingId === delivery._id} onClick={() => submitDispatchCondition(delivery._id)}>{reportingId === delivery._id ? "Saving report..." : "Save condition & photos"}</button>
+                  </div>
+                )}
+                {delivery.dispatchConditionReport && (
+                  <div className="condition-report-saved"><strong>Pre-dispatch condition: {delivery.dispatchConditionReport.condition}</strong><span>{delivery.dispatchConditionReport.notes || "No additional notes"}</span><small>Recorded {formatDate(delivery.dispatchConditionReport.reportedAt)} · {delivery.dispatchConditionReport.photos.length} photo(s)</small></div>
+                )}
                 <div className="provider-delivery-card-footer">
                   <span>
                     {isArranged
