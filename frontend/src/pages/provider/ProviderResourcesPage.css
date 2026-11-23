@@ -386,3 +386,20 @@
     flex-wrap: wrap;
   }
 }
+
+
+.resource-form-hint,
+.resource-form-error {
+  display: block;
+  margin-top: 6px;
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.resource-form-hint {
+  color: #286b50;
+}
+
+.resource-form-error {
+  color: #a33b35;
+}
