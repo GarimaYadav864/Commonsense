@@ -206,6 +206,25 @@ const verifyPayment = async (req, res) => {
   }
 };
 
+const getProviderContributions = async (req, res) => {
+  try {
+    const contributions = await Payment.find({
+      beneficiary: req.user._id,
+      type: "provider_contribution",
+      status: "paid",
+    })
+      .populate("delivery", "method status")
+      .populate("payer", "name")
+      .sort({ paidAt: -1 })
+      .lean();
+
+    return res.status(200).json({ success: true, contributions });
+  } catch (error) {
+    console.error("Get provider contributions error:", error);
+    return res.status(500).json({ success: false, message: "Unable to load contributions" });
+  }
+};
+
 const getMyPayments = async (req, res) => {
   try {
     const payments = await Payment.find({ payer: req.user._id })
@@ -220,4 +239,4 @@ const getMyPayments = async (req, res) => {
   }
 };
 
-module.exports = { createPaymentOrder, verifyPayment, getMyPayments };
+module.exports = { createPaymentOrder, verifyPayment, getMyPayments, getProviderContributions };
