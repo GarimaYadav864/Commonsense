@@ -24,6 +24,7 @@ import {
   ShieldCheck,
   History,
   FileBarChart,
+  Scale,
 } from "lucide-react";
 
 import { useAuth } from "../context/AuthContext";
@@ -67,6 +68,7 @@ const adminLinks: NavigationLink[] = [
   { label: "Requests & Resources", path: "/admin/records", icon: ClipboardList },
   { label: "Audit Logs", path: "/admin/audit-logs", icon: History },
   { label: "Reports & Analytics", path: "/admin/reports", icon: FileBarChart },
+  { label: "Damage Disputes", path: "/admin/disputes", icon: Scale },
   { label: "Notifications", path: "/notifications", icon: Bell, end: true },
 ];
 
