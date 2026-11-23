@@ -440,7 +440,7 @@ export default function ProviderDeliveriesPage() {
                       : `Current status: ${delivery.status}`}
                   </span>
 
-                  {isArranged && (
+                  {isArranged && delivery.dispatchConditionReport && (
                     <button
                       className="delivery-dispatch-btn"
                       onClick={() => handleDispatch(delivery._id)}
