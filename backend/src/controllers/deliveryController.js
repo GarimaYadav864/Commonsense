@@ -752,6 +752,7 @@ const confirmReceipt = async (req, res) => {
 
 module.exports = {
   createDelivery,
+  quoteDelivery,
   getMyDeliveries,
   getAvailableDeliveries,
   claimDelivery,
