@@ -7,6 +7,7 @@ import {
   Truck,
 } from "lucide-react";
 import api from "../../services/api";
+import DeliveryPaymentPanel from "../../components/payments/DeliveryPaymentPanel";
 import "./DeliveryTrackingPage.css";
 
 type DeliveryStatus =
@@ -308,6 +309,13 @@ function DeliveryTrackingPage() {
                     </span>
                   )}
                 </div>
+
+                <DeliveryPaymentPanel
+                  deliveryId={delivery._id}
+                  method={delivery.method}
+                  quotedCost={delivery.quotedCost}
+                  providerName={delivery.provider?.name}
+                />
 
                 <div className="delivery-card-footer">
                   <span className="delivery-method-label">
