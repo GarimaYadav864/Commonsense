@@ -13,6 +13,7 @@ import "./DeliveryTrackingPage.css";
 type DeliveryStatus =
   | "arranged"
   | "dispatched"
+  | "in_transit"
   | "delivered"
   | "received"
   | "cancelled";
@@ -29,6 +30,7 @@ interface Delivery {
   providerConfirmed?: boolean;
   requesterConfirmed?: boolean;
   dispatchedAt?: string;
+  deliveredAt?: string;
   receivedAt?: string;
   request?: {
     title: string;
@@ -43,12 +45,15 @@ interface Delivery {
 const statusSteps: DeliveryStatus[] = [
   "arranged",
   "dispatched",
+  "in_transit",
+  "delivered",
   "received",
 ];
 
 const statusLabels: Record<DeliveryStatus, string> = {
   arranged: "Delivery Arranged",
   dispatched: "Resource Dispatched",
+  in_transit: "In Transit",
   delivered: "Marked Delivered",
   received: "Received",
   cancelled: "Cancelled",
@@ -162,7 +167,7 @@ function DeliveryTrackingPage() {
           <strong>
             {
               deliveries.filter((d) =>
-                ["arranged", "dispatched", "delivered"].includes(d.status)
+                ["arranged", "dispatched", "in_transit", "delivered"].includes(d.status)
               ).length
             }
           </strong>
@@ -303,6 +308,10 @@ function DeliveryTrackingPage() {
                     </span>
                   )}
 
+                  {delivery.deliveredAt && (
+                    <span>Delivered: {formatDate(delivery.deliveredAt)}</span>
+                  )}
+
                   {delivery.receivedAt && (
                     <span>
                       Received: {formatDate(delivery.receivedAt)}
@@ -324,7 +333,7 @@ function DeliveryTrackingPage() {
                       : "Community delivery"}
                   </span>
 
-                  {delivery.status === "dispatched" && (
+                  {["dispatched", "delivered"].includes(delivery.status) && (
                     <button
                       className="receipt-btn"
                       disabled={processingId === delivery._id}
