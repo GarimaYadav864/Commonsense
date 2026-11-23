@@ -72,7 +72,7 @@ function DeliveryTrackingPage() {
   const [processingId, setProcessingId] = useState<string | null>(null);
   const [conditionDrafts, setConditionDrafts] = useState<Record<string, { condition: string; notes: string; photos: string[] }>>({});
   const [reviewDrafts, setReviewDrafts] = useState<Record<string, { rating: number; comment: string }>>({});
-  const [reviewedIds, setReviewedIds] = useState<string[]>([]);
+  const [reviewedIds, setReviewedIds] = useState<string[]>([]);\n  const [volunteerReviewDrafts, setVolunteerReviewDrafts] = useState<Record<string, { rating: number; comment: string }>>({});\n  const [volunteerReviewedIds, setVolunteerReviewedIds] = useState<string[]>([]);\n  const [reputationByVolunteer, setReputationByVolunteer] = useState<Record<string, { averageRating: number | null; reviewCount: number; completedDeliveries: number }>>({});
   const [reputationByProvider, setReputationByProvider] = useState<Record<string, { averageRating: number | null; reviewCount: number; completedDeliveries: number }>>({});
 
   const fetchDeliveries = useCallback(async () => {
@@ -94,7 +94,7 @@ function DeliveryTrackingPage() {
           return [providerId, null] as const;
         }
       }));
-      setReputationByProvider(Object.fromEntries(reputationResults.filter((item) => item[1])));
+      setReputationByProvider(Object.fromEntries(reputationResults.filter((item) => item[1])));\n      const volunteerIds = [...new Set(loadedDeliveries.map((item: any) => item.volunteer?._id).filter(Boolean))] as string[];\n      const volunteerResults = await Promise.all(volunteerIds.map(async (volunteerId) => {\n        try {\n          const result = await api.get(`/deliveries/volunteer-reputation/${volunteerId}`);\n          return [volunteerId, result.data.reputation] as const;\n        } catch { return [volunteerId, null] as const; }\n      }));\n      setReputationByVolunteer(Object.fromEntries(volunteerResults.filter((item) => item[1])));
     } catch (err: unknown) {
       setError(
         err instanceof Error
@@ -145,6 +145,21 @@ function DeliveryTrackingPage() {
       setError("Thanks! Your provider review has been submitted.");
     } catch (error: any) {
       setError(error?.response?.data?.message || "Unable to submit your review.");
+    } finally {
+      setProcessingId(null);
+    }
+  };
+
+  const submitVolunteerReview = async (deliveryId: string) => {
+    const draft = volunteerReviewDrafts[deliveryId] || { rating: 5, comment: "" };
+    try {
+      setProcessingId(deliveryId);
+      setError("");
+      await api.post(`/deliveries/${deliveryId}/volunteer-review`, draft);
+      setVolunteerReviewedIds((current) => [...current, deliveryId]);
+      setError("Thanks! Your volunteer feedback has been submitted.");
+    } catch (error: any) {
+      setError(error?.response?.data?.message || "Unable to submit volunteer review.");
     } finally {
       setProcessingId(null);
     }
@@ -448,6 +463,39 @@ function DeliveryTrackingPage() {
                         </label>
                         <button type="button" className="condition-report-submit" disabled={processingId === delivery._id} onClick={() => submitReview(delivery._id)}>
                           {processingId === delivery._id ? "Submitting..." : "Submit provider review"}
+                        </button>
+                      </>
+                    )}
+                  </section>
+                )}
+                {delivery.status === "received" && delivery.method === "community_delivery" && delivery.volunteer?._id && (
+                  <section className="provider-review-panel">
+                    <h4>Rate your delivery volunteer</h4>
+                    {reputationByVolunteer[delivery.volunteer._id] && (
+                      <p>
+                        {reputationByVolunteer[delivery.volunteer._id].averageRating == null
+                          ? "No ratings yet"
+                          : `${reputationByVolunteer[delivery.volunteer._id].averageRating} / 5 from ${reputationByVolunteer[delivery.volunteer._id].reviewCount} review(s)`}
+                        { ` · ${reputationByVolunteer[delivery.volunteer._id].completedDeliveries} completed delivery(s)` }
+                      </p>
+                    )}
+                    {volunteerReviewedIds.includes(delivery._id) ? (
+                      <p>Your volunteer feedback has been recorded.</p>
+                    ) : (
+                      <>
+                        <label>Rating
+                          <select
+                            value={volunteerReviewDrafts[delivery._id]?.rating ?? 5}
+                            onChange={(event) => setVolunteerReviewDrafts((current) => ({ ...current, [delivery._id]: { rating: Number(event.target.value), comment: current[delivery._id]?.comment || "" } }))}
+                          >
+                            <option value={5}>5 - Excellent</option><option value={4}>4 - Good</option><option value={3}>3 - Average</option><option value={2}>2 - Poor</option><option value={1}>1 - Very poor</option>
+                          </select>
+                        </label>
+                        <label>Feedback (optional)
+                          <textarea maxLength={1000} value={volunteerReviewDrafts[delivery._id]?.comment || ""} onChange={(event) => setVolunteerReviewDrafts((current) => ({ ...current, [delivery._id]: { rating: current[delivery._id]?.rating ?? 5, comment: event.target.value } }))} placeholder="Share feedback about the delivery experience" />
+                        </label>
+                        <button type="button" className="condition-report-submit" disabled={processingId === delivery._id} onClick={() => submitVolunteerReview(delivery._id)}>
+                          {processingId === delivery._id ? "Submitting..." : "Submit volunteer review"}
                         </button>
                       </>
                     )}
