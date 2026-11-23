@@ -400,8 +400,8 @@ function ProviderResourcesPage() {
                 >
                   <option value="new">New</option>
                   <option value="good">Good</option>
-                  <option value="used">Used</option>
-                  <option value="refurbished">Refurbished</option>
+                  <option value="fair">Fair</option>
+                  <option value="not-applicable">Not applicable</option>
                 </select>
               </label>
 
