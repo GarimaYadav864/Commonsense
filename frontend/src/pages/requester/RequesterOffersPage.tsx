@@ -11,6 +11,17 @@ import {
 import api from "../../services/api";
 import "./RequesterOffersPage.css";
 
+interface ExistingDelivery {
+  _id: string;
+  offer: string | { _id: string };
+  method: "self_pickup" | "community_delivery";
+  pickupAddress?: string;
+  deliveryAddress?: string;
+  quotedCost: number;
+  costCurrency?: string;
+  status: string;
+}
+
 interface Offer {
   _id: string;
   status: "pending" | "accepted" | "rejected" | "expired" | "cancelled";
@@ -44,14 +55,33 @@ function RequesterOffersPage() {
   const [error, setError] = useState("");
   const [filter, setFilter] = useState("all");
   const [processingId, setProcessingId] = useState<string | null>(null);
+  const [deliveryByOffer, setDeliveryByOffer] = useState<Record<string, ExistingDelivery>>({});
+  const [arrangingOfferId, setArrangingOfferId] = useState<string | null>(null);
+  const [deliveryMethod, setDeliveryMethod] = useState<"self_pickup" | "community_delivery">("self_pickup");
+  const [pickupAddress, setPickupAddress] = useState("");
+  const [deliveryAddress, setDeliveryAddress] = useState("");
+  const [transportDetails, setTransportDetails] = useState("");
+  const [quotedCost, setQuotedCost] = useState("0");
 
   const fetchOffers = useCallback(async () => {
     try {
       setLoading(true);
       setError("");
 
-      const response = await api.get("/offers/requester/my");
-      setOffers(response.data.offers || []);
+      const [offersResponse, deliveriesResponse] = await Promise.all([
+        api.get("/offers/requester/my"),
+        api.get("/deliveries/my"),
+      ]);
+      setOffers(offersResponse.data.offers || []);
+
+      const deliveries: ExistingDelivery[] = deliveriesResponse.data.deliveries || [];
+      const byOffer: Record<string, ExistingDelivery> = {};
+      deliveries.forEach((delivery) => {
+        const offerId =
+          typeof delivery.offer === "string" ? delivery.offer : delivery.offer?._id;
+        if (offerId) byOffer[offerId] = delivery;
+      });
+      setDeliveryByOffer(byOffer);
     } catch (err: unknown) {
       setError(
         err instanceof Error ? err.message : "Unable to load your offers."
@@ -88,6 +118,46 @@ function RequesterOffersPage() {
       await fetchOffers();
     } catch {
       setError("Unable to cancel this offer. Please try again.");
+    } finally {
+      setProcessingId(null);
+    }
+  };
+
+  const arrangeDelivery = async (offerId: string) => {
+    if (deliveryMethod === "self_pickup" && !pickupAddress.trim()) {
+      setError("Please enter the pickup address.");
+      return;
+    }
+    if (deliveryMethod === "community_delivery" && !deliveryAddress.trim()) {
+      setError("Please enter the delivery address.");
+      return;
+    }
+
+    const cost = Number(quotedCost);
+    if (!Number.isFinite(cost) || cost < 0) {
+      setError("Please enter a valid transportation cost.");
+      return;
+    }
+
+    try {
+      setProcessingId(offerId);
+      setError("");
+      await api.post("/deliveries", {
+        offerId,
+        method: deliveryMethod,
+        pickupAddress: deliveryMethod === "self_pickup" ? pickupAddress.trim() : undefined,
+        deliveryAddress: deliveryMethod === "community_delivery" ? deliveryAddress.trim() : undefined,
+        transportDetails: transportDetails.trim(),
+        quotedCost: deliveryMethod === "community_delivery" ? cost : 0,
+      });
+      setArrangingOfferId(null);
+      setPickupAddress("");
+      setDeliveryAddress("");
+      setTransportDetails("");
+      setQuotedCost("0");
+      await fetchOffers();
+    } catch (err: any) {
+      setError(err?.response?.data?.message || "Unable to create the delivery arrangement.");
     } finally {
       setProcessingId(null);
     }
@@ -271,6 +341,78 @@ function RequesterOffersPage() {
                     )}
                 </div>
               </div>
+
+              {offer.status === "accepted" && offer.requesterConfirmed && (
+                <div className="delivery-arrangement-panel">
+                  {deliveryByOffer[offer._id] ? (
+                    <div className="delivery-arranged-summary">
+                      <strong>Delivery arranged</strong>
+                      <span>
+                        {deliveryByOffer[offer._id].method === "self_pickup"
+                          ? "Self pickup"
+                          : "Community delivery"}
+                        {" · "}
+                        {deliveryByOffer[offer._id].costCurrency || "INR"}{" "}
+                        {deliveryByOffer[offer._id].quotedCost ?? 0}
+                      </span>
+                      <small>Status: {deliveryByOffer[offer._id].status}</small>
+                    </div>
+                  ) : arrangingOfferId === offer._id ? (
+                    <div className="delivery-arrangement-form">
+                      <h4>Arrange collection or delivery</h4>
+                      <label>
+                        Fulfilment option
+                        <select
+                          value={deliveryMethod}
+                          onChange={(event) => setDeliveryMethod(event.target.value as "self_pickup" | "community_delivery")}
+                        >
+                          <option value="self_pickup">Self pickup</option>
+                          <option value="community_delivery">Community delivery</option>
+                        </select>
+                      </label>
+                      {deliveryMethod === "self_pickup" ? (
+                        <label>
+                          Pickup address
+                          <input value={pickupAddress} onChange={(event) => setPickupAddress(event.target.value)} placeholder="Provider's pickup address" />
+                        </label>
+                      ) : (
+                        <>
+                          <label>
+                            Delivery address
+                            <input value={deliveryAddress} onChange={(event) => setDeliveryAddress(event.target.value)} placeholder="Where should the resource be delivered?" />
+                          </label>
+                          <label>
+                            Estimated transport cost (INR)
+                            <input type="number" min="0" step="0.01" value={quotedCost} onChange={(event) => setQuotedCost(event.target.value)} />
+                          </label>
+                          <label>
+                            Transport details
+                            <input value={transportDetails} onChange={(event) => setTransportDetails(event.target.value)} placeholder="Optional delivery notes" />
+                          </label>
+                          <small>This is a cost quote, not an online payment.</small>
+                        </>
+                      )}
+                      <div className="delivery-arrangement-actions">
+                        <button type="button" onClick={() => setArrangingOfferId(null)}>Cancel</button>
+                        <button type="button" disabled={processingId === offer._id} onClick={() => arrangeDelivery(offer._id)}>
+                          {processingId === offer._id ? "Saving..." : "Confirm arrangement"}
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <button
+                      className="confirm-offer-btn"
+                      onClick={() => {
+                        setDeliveryMethod("self_pickup");
+                        setArrangingOfferId(offer._id);
+                        setError("");
+                      }}
+                    >
+                      Arrange pickup / delivery
+                    </button>
+                  )}
+                </div>
+              )}
             </article>
           ))}
         </div>
