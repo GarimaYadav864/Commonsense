@@ -32,6 +32,7 @@ interface Delivery {
   dispatchedAt?: string;
   deliveredAt?: string;
   receivedAt?: string;
+  volunteerLocation?: { latitude?: number | null; longitude?: number | null; updatedAt?: string | null };
   request?: {
     title: string;
     category?: string;
@@ -319,6 +320,16 @@ function DeliveryTrackingPage() {
                   )}
                 </div>
 
+
+                {delivery.volunteerLocation?.latitude != null && delivery.volunteerLocation?.longitude != null && (
+                  <div className="delivery-live-location">
+                    <div>
+                      <strong><MapPin size={16} /> Volunteer location</strong>
+                      <span>Last updated: {formatDate(delivery.volunteerLocation.updatedAt || undefined)}</span>
+                    </div>
+                    <a href={`https://www.google.com/maps?q=${delivery.volunteerLocation.latitude},${delivery.volunteerLocation.longitude}`} target="_blank" rel="noreferrer">View latest position</a>
+                  </div>
+                )}
                 <DeliveryPaymentPanel
                   deliveryId={delivery._id}
                   method={delivery.method}
