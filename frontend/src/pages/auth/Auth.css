@@ -442,3 +442,28 @@
   opacity: 0.65;
   cursor: not-allowed;
 }
+
+
+/* Password recovery pages */
+.auth-success-state > svg {
+  color: var(--forest-light);
+  margin-bottom: 22px;
+}
+
+.auth-submit-link {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+}
+
+.auth-back-with-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.auth-form-container .auth-input-wrap + label {
+  margin-top: 20px;
+}
