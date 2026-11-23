@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import api from "../../services/api";
 import { compressConditionPhoto } from "../../utils/conditionEvidence";
+import DamageDisputePanel from "../../components/deliveries/DamageDisputePanel";
 import "./ProviderDeliveriesPage.css";
 
 type DeliveryStatus =
@@ -40,6 +41,7 @@ interface Delivery {
   costCurrency?: string;
   status: DeliveryStatus;
   dispatchConditionReport?: { condition: string; notes: string; photos: string[]; reportedAt: string } | null;
+  damageDispute?: any;
   dispatchedAt?: string | null;
   createdAt: string;
   request?: {
@@ -427,6 +429,7 @@ export default function ProviderDeliveriesPage() {
                 {delivery.dispatchConditionReport && (
                   <div className="condition-report-saved"><strong>Pre-dispatch condition: {delivery.dispatchConditionReport.condition}</strong><span>{delivery.dispatchConditionReport.notes || "No additional notes"}</span><small>Recorded {formatDate(delivery.dispatchConditionReport.reportedAt)} · {delivery.dispatchConditionReport.photos.length} photo(s)</small><div className="condition-report-photos">{delivery.dispatchConditionReport.photos.map((photo, index) => <img key={index} src={photo} alt={`Pre-dispatch evidence ${index + 1}`} />)}</div></div>
                 )}
+                {delivery.damageDispute && <DamageDisputePanel deliveryId={delivery._id} role="provider" dispute={delivery.damageDispute} onUpdated={fetchDeliveries} />}
                 <div className="provider-delivery-card-footer">
                   <span>
                     {isArranged
