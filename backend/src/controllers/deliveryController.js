@@ -448,6 +448,86 @@ const markDispatched = async (req, res) => {
 
 
 
+
+// VOLUNTEER UPDATES DELIVERY PROGRESS
+const updateVolunteerDeliveryStatus = async (req, res) => {
+  try {
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(400).json({ success: false, message: "Invalid delivery ID" });
+    }
+
+    const { status } = req.body;
+    if (!["in_transit", "delivered"].includes(status)) {
+      return res.status(400).json({
+        success: false,
+        message: "Status must be in_transit or delivered",
+      });
+    }
+
+    const allowedPreviousStatuses =
+      status === "in_transit" ? ["dispatched"] : ["in_transit"];
+
+    const update = { status };
+    if (status === "delivered") update.deliveredAt = new Date();
+
+    const delivery = await Delivery.findOneAndUpdate(
+      {
+        _id: req.params.id,
+        volunteer: req.user._id,
+        method: "community_delivery",
+        status: { $in: allowedPreviousStatuses },
+      },
+      { $set: update },
+      { new: true, runValidators: true }
+    )
+      .populate("request")
+      .populate("provider", "name")
+      .populate("requester", "name")
+      .populate("volunteer", "name");
+
+    if (!delivery) {
+      return res.status(409).json({
+        success: false,
+        message: "This delivery cannot move to that status. Check its current status and your assignment.",
+      });
+    }
+
+    const io = req.app.get("io");
+    const label = status === "in_transit" ? "in transit" : "marked delivered";
+    await Promise.allSettled([
+      createNotification({
+        io,
+        recipient: delivery.requester?._id || delivery.requester,
+        type: "delivery_status_updated",
+        title: status === "in_transit" ? "Your delivery is in transit" : "Your delivery has arrived",
+        message: status === "in_transit"
+          ? "Your assigned volunteer has started the delivery."
+          : "Your assigned volunteer has marked the resource as delivered. Please confirm receipt.",
+        relatedId: delivery._id,
+        relatedModel: "Delivery",
+      }),
+      createNotification({
+        io,
+        recipient: delivery.provider?._id || delivery.provider,
+        type: "delivery_status_updated",
+        title: "Delivery progress updated",
+        message: `The volunteer has ${label}.`,
+        relatedId: delivery._id,
+        relatedModel: "Delivery",
+      }),
+    ]);
+
+    return res.status(200).json({
+      success: true,
+      message: status === "in_transit" ? "Delivery marked as in transit." : "Delivery marked as delivered.",
+      delivery,
+    });
+  } catch (error) {
+    console.error("Volunteer delivery status error:", error);
+    return res.status(500).json({ success: false, message: "Unable to update delivery status" });
+  }
+};
+
 // REQUESTER CONFIRMS RECEIPT
 
 
@@ -470,7 +550,7 @@ const confirmReceipt = async (req, res) => {
         {
           _id: req.params.id,
           requester: req.user._id,
-          status: "dispatched",
+          status: { $in: ["dispatched", "in_transit", "delivered"] },
           requesterConfirmed: false,
         },
         {
@@ -582,5 +662,6 @@ module.exports = {
   getAvailableDeliveries,
   claimDelivery,
   markDispatched,
+  updateVolunteerDeliveryStatus,
   confirmReceipt,
 };
