@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import api from "../../services/api";
 import DeliveryPaymentPanel from "../../components/payments/DeliveryPaymentPanel";
+import DamageDisputePanel from "../../components/deliveries/DamageDisputePanel";
 import { compressConditionPhoto } from "../../utils/conditionEvidence";
 import "./DeliveryTrackingPage.css";
 
@@ -35,6 +36,7 @@ interface Delivery {
   receivedAt?: string;
   dispatchConditionReport?: { condition: string; notes: string; photos: string[]; reportedAt: string } | null;
   receiptConditionReport?: { condition: string; notes: string; photos: string[]; reportedAt: string } | null;
+  damageDispute?: any;
   volunteerLocation?: { latitude?: number | null; longitude?: number | null; updatedAt?: string | null };
   request?: {
     title: string;
@@ -383,6 +385,7 @@ function DeliveryTrackingPage() {
                     </div>
                   )}
                 </div>
+                <DamageDisputePanel deliveryId={delivery._id} role="requester" receiptCondition={delivery.receiptConditionReport?.condition} dispute={delivery.damageDispute} onUpdated={fetchDeliveries} />
                 <DeliveryPaymentPanel
                   deliveryId={delivery._id}
                   method={delivery.method}
