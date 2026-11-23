@@ -18,6 +18,7 @@ interface ExistingDelivery {
   pickupAddress?: string;
   deliveryAddress?: string;
   quotedCost: number;
+  distanceKm?: number | null;
   costCurrency?: string;
   status: string;
 }
@@ -61,7 +62,8 @@ function RequesterOffersPage() {
   const [pickupAddress, setPickupAddress] = useState("");
   const [deliveryAddress, setDeliveryAddress] = useState("");
   const [transportDetails, setTransportDetails] = useState("");
-  const [quotedCost, setQuotedCost] = useState("0");
+  const [deliveryQuote, setDeliveryQuote] = useState<{ distanceKm: number; quotedCost: number; baseFare: number; ratePerKm: number; distanceCharge: number } | null>(null);
+  const [quoteLoading, setQuoteLoading] = useState(false);
 
   const fetchOffers = useCallback(async () => {
     try {
@@ -133,11 +135,6 @@ function RequesterOffersPage() {
       return;
     }
 
-    const cost = Number(quotedCost);
-    if (!Number.isFinite(cost) || cost < 0) {
-      setError("Please enter a valid transportation cost.");
-      return;
-    }
 
     try {
       setProcessingId(offerId);
@@ -148,13 +145,12 @@ function RequesterOffersPage() {
         pickupAddress: deliveryMethod === "self_pickup" ? pickupAddress.trim() : undefined,
         deliveryAddress: deliveryMethod === "community_delivery" ? deliveryAddress.trim() : undefined,
         transportDetails: transportDetails.trim(),
-        quotedCost: deliveryMethod === "community_delivery" ? cost : 0,
       });
       setArrangingOfferId(null);
       setPickupAddress("");
       setDeliveryAddress("");
       setTransportDetails("");
-      setQuotedCost("0");
+      setDeliveryQuote(null);
       await fetchOffers();
     } catch (err: any) {
       setError(err?.response?.data?.message || "Unable to create the delivery arrangement.");
@@ -163,6 +159,19 @@ function RequesterOffersPage() {
     }
   };
 
+  const calculateQuote = async (offerId: string) => {
+    try {
+      setQuoteLoading(true);
+      setError("");
+      const response = await api.post("/deliveries/quote", { offerId });
+      setDeliveryQuote(response.data.quote);
+    } catch (err: any) {
+      setDeliveryQuote(null);
+      setError(err?.response?.data?.message || "Unable to calculate delivery estimate.");
+    } finally {
+      setQuoteLoading(false);
+    }
+  };
   const filteredOffers = offers.filter(
     (offer) => filter === "all" || offer.status === filter
   );
@@ -381,20 +390,27 @@ function RequesterOffersPage() {
                             Delivery address
                             <input value={deliveryAddress} onChange={(event) => setDeliveryAddress(event.target.value)} placeholder="Where should the resource be delivered?" />
                           </label>
-                          <label>
-                            Estimated transport cost (INR)
-                            <input type="number" min="0" step="0.01" value={quotedCost} onChange={(event) => setQuotedCost(event.target.value)} />
-                          </label>
+                          <div className="delivery-quote-preview">
+                            <button type="button" onClick={() => calculateQuote(offer._id)} disabled={quoteLoading}>
+                              {quoteLoading ? "Calculating..." : "Calculate transport estimate"}
+                            </button>
+                            {deliveryQuote && (
+                              <div>
+                                <strong>Estimated charge: ₹{deliveryQuote.quotedCost}</strong>
+                                <span>{deliveryQuote.distanceKm} km estimated · ₹{deliveryQuote.baseFare} base + ₹{deliveryQuote.ratePerKm}/km (distance charge ₹{deliveryQuote.distanceCharge.toFixed(2)})</span>
+                              </div>
+                            )}
+                          </div>
                           <label>
                             Transport details
                             <input value={transportDetails} onChange={(event) => setTransportDetails(event.target.value)} placeholder="Optional delivery notes" />
                           </label>
-                          <small>This is a cost quote, not an online payment.</small>
+                          <small>Estimate uses saved GPS coordinates, a 1.25 road-detour factor, ₹20 base fare and ₹8 per km. The server calculates and validates the final quote.</small>
                         </>
                       )}
                       <div className="delivery-arrangement-actions">
                         <button type="button" onClick={() => setArrangingOfferId(null)}>Cancel</button>
-                        <button type="button" disabled={processingId === offer._id} onClick={() => arrangeDelivery(offer._id)}>
+                        <button type="button" disabled={processingId === offer._id || (deliveryMethod === "community_delivery" && !deliveryQuote)} onClick={() => arrangeDelivery(offer._id)}>
                           {processingId === offer._id ? "Saving..." : "Confirm arrangement"}
                         </button>
                       </div>
@@ -404,6 +420,7 @@ function RequesterOffersPage() {
                       className="confirm-offer-btn"
                       onClick={() => {
                         setDeliveryMethod("self_pickup");
+                        setDeliveryQuote(null);
                         setArrangingOfferId(offer._id);
                         setError("");
                       }}
