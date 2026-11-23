@@ -528,6 +528,36 @@ const updateVolunteerDeliveryStatus = async (req, res) => {
   }
 };
 
+
+const updateVolunteerLocation = async (req, res) => {
+  try {
+    const { latitude, longitude } = req.body;
+    if (
+      typeof latitude !== "number" || typeof longitude !== "number" ||
+      !Number.isFinite(latitude) || !Number.isFinite(longitude) ||
+      latitude < -90 || latitude > 90 || longitude < -180 || longitude > 180
+    ) {
+      return res.status(400).json({ success: false, message: "Valid latitude and longitude are required" });
+    }
+    const delivery = await Delivery.findOneAndUpdate(
+      { _id: req.params.id, volunteer: req.user._id, method: "community_delivery", status: "in_transit" },
+      { $set: {
+        "volunteerLocation.latitude": latitude,
+        "volunteerLocation.longitude": longitude,
+        "volunteerLocation.updatedAt": new Date(),
+      } },
+      { new: true, runValidators: true }
+    ).select("_id volunteerLocation status");
+    if (!delivery) {
+      return res.status(409).json({ success: false, message: "Location can only be shared by the assigned volunteer while the delivery is in transit." });
+    }
+    return res.status(200).json({ success: true, message: "Location updated", volunteerLocation: delivery.volunteerLocation });
+  } catch (error) {
+    console.error("Volunteer location update error:", error);
+    return res.status(500).json({ success: false, message: "Unable to update volunteer location" });
+  }
+};
+
 // REQUESTER CONFIRMS RECEIPT
 
 
@@ -663,5 +693,6 @@ module.exports = {
   claimDelivery,
   markDispatched,
   updateVolunteerDeliveryStatus,
+  updateVolunteerLocation,
   confirmReceipt,
 };
