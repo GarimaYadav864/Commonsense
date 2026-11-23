@@ -1,4 +1,3 @@
-
 const mongoose = require("mongoose");
 
 const requestSchema = new mongoose.Schema(
@@ -83,19 +82,13 @@ const requestSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-const validateCoordinates = function (next) {
+requestSchema.pre("validate", function () {
   const hasLatitude = this.latitude != null;
   const hasLongitude = this.longitude != null;
 
   if (hasLatitude !== hasLongitude) {
-    return next(
-      new Error("Latitude and longitude must be provided together")
-    );
+    throw new Error("Latitude and longitude must be provided together");
   }
-
-  next();
-};
-
-requestSchema.pre("validate", validateCoordinates);
+});
 
 module.exports = mongoose.model("Request", requestSchema);
