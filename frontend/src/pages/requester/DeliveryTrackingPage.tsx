@@ -360,10 +360,10 @@ function DeliveryTrackingPage() {
                 <div className="condition-report-comparison">
                   <h4>Handover condition evidence</h4>
                   {delivery.dispatchConditionReport ? (
-                    <div className="condition-report-saved"><strong>Before dispatch: {delivery.dispatchConditionReport.condition}</strong><span>{delivery.dispatchConditionReport.notes || "No additional notes"}</span><small>{delivery.dispatchConditionReport.photos.length} photo(s) · {formatDate(delivery.dispatchConditionReport.reportedAt)}</small></div>
+                    <div className="condition-report-saved"><strong>Before dispatch: {delivery.dispatchConditionReport.condition}</strong><span>{delivery.dispatchConditionReport.notes || "No additional notes"}</span><small>{delivery.dispatchConditionReport.photos.length} photo(s) · {formatDate(delivery.dispatchConditionReport.reportedAt)}</small><div className="condition-report-photos">{delivery.dispatchConditionReport.photos.map((photo, index) => <img key={index} src={photo} alt={`Before-dispatch evidence ${index + 1}`} />)}</div></div>
                   ) : <p>Provider has not submitted pre-dispatch evidence yet.</p>}
                   {delivery.receiptConditionReport ? (
-                    <div className="condition-report-saved"><strong>On arrival: {delivery.receiptConditionReport.condition}</strong><span>{delivery.receiptConditionReport.notes || "No additional notes"}</span><small>{delivery.receiptConditionReport.photos.length} photo(s) · {formatDate(delivery.receiptConditionReport.reportedAt)}</small></div>
+                    <div className="condition-report-saved"><strong>On arrival: {delivery.receiptConditionReport.condition}</strong><span>{delivery.receiptConditionReport.notes || "No additional notes"}</span><small>{delivery.receiptConditionReport.photos.length} photo(s) · {formatDate(delivery.receiptConditionReport.reportedAt)}</small><div className="condition-report-photos">{delivery.receiptConditionReport.photos.map((photo, index) => <img key={index} src={photo} alt={`Arrival evidence ${index + 1}`} />)}</div></div>
                   ) : (
                     <div className="condition-report-panel">
                       <h5>Record condition on arrival</h5>
