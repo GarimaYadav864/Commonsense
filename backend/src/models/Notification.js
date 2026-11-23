@@ -25,6 +25,7 @@ const notificationSchema = new mongoose.Schema(
         "request_matched",
         "request_update",
         "admin_new_request",
+        "community_request_posted",
         "admin_new_resource",
         "admin_moderation_action",
         "admin_delivery_update",
