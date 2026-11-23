@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import api from "../../services/api";
 import "./ProviderDashboard.css";
+import CommunityRequestsPanel from "../../components/community/CommunityRequestsPanel";
 
 interface Resource {
   _id: string;
@@ -163,6 +164,8 @@ function ProviderDashboard() {
           <small>Ready for fulfilment coordination</small>
         </div>
       </div>
+
+      <CommunityRequestsPanel />
 
       <div className="provider-content-grid">
         <section className="provider-panel">
