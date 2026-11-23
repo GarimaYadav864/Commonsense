@@ -21,6 +21,7 @@ const notificationSchema = new mongoose.Schema(
         "delivery_arranged",
         "delivery_claimed",
         "delivery_dispatched",
+        "delivery_status_updated",
         "delivery_received",
         "request_matched",
         "request_update",
