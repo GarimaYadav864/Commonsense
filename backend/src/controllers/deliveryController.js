@@ -434,7 +434,7 @@ const markDispatched = async (req, res) => {
       return res.status(409).json({
         success: false,
         message:
-          "Delivery cannot be dispatched. It may already be dispatched, unavailable, or awaiting volunteer assignment.",
+          "Save the pre-dispatch condition report first. Also check whether a volunteer is assigned for community delivery.",
       });
     }
 
