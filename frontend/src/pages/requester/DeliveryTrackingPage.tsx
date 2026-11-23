@@ -73,6 +73,7 @@ function DeliveryTrackingPage() {
   const [conditionDrafts, setConditionDrafts] = useState<Record<string, { condition: string; notes: string; photos: string[] }>>({});
   const [reviewDrafts, setReviewDrafts] = useState<Record<string, { rating: number; comment: string }>>({});
   const [reviewedIds, setReviewedIds] = useState<string[]>([]);
+  const [reputationByProvider, setReputationByProvider] = useState<Record<string, { averageRating: number | null; reviewCount: number; completedDeliveries: number }>>({});
 
   const fetchDeliveries = useCallback(async () => {
     try {
