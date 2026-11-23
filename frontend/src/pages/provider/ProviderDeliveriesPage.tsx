@@ -3,6 +3,7 @@ import { useCallback, useEffect, useState } from "react";
 import {
   AlertCircle,
   CheckCircle2,
+  HeartHandshake,
   Clock3,
   MapPin,
   Package,
@@ -19,6 +20,14 @@ type DeliveryStatus =
   | "delivered"
   | "received"
   | "cancelled";
+
+interface ProviderContribution {
+  _id: string;
+  amount: number;
+  paidAt?: string;
+  delivery: string | { _id: string };
+  payer?: { name?: string };
+}
 
 interface Delivery {
   _id: string;
@@ -73,16 +82,21 @@ export default function ProviderDeliveriesPage() {
   const [dispatchingId, setDispatchingId] = useState<string | null>(null);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [contributions, setContributions] = useState<ProviderContribution[]>([]);
 
   const fetchDeliveries = useCallback(async () => {
     try {
       setLoading(true);
       setError("");
 
-      const response = await api.get("/deliveries/my");
+      const [response, contributionResponse] = await Promise.all([
+        api.get("/deliveries/my"),
+        api.get("/payments/provider/contributions"),
+      ]);
       const data = response.data?.deliveries;
 
       setDeliveries(Array.isArray(data) ? data : []);
+      setContributions(contributionResponse.data?.contributions || []);
     } catch (err) {
       setError(getErrorMessage(err));
     } finally {
@@ -345,6 +359,23 @@ export default function ProviderDeliveriesPage() {
                     Dispatched on {formatDate(delivery.dispatchedAt)}
                   </div>
                 )}
+
+                {(() => {
+                  const deliveryContributions = contributions.filter((item) => {
+                    const id = typeof item.delivery === "string" ? item.delivery : item.delivery?._id;
+                    return id === delivery._id;
+                  });
+                  const totalPaise = deliveryContributions.reduce((sum, item) => sum + item.amount, 0);
+                  return totalPaise > 0 ? (
+                    <div className="provider-contribution-summary">
+                      <HeartHandshake size={17} />
+                      <div>
+                        <strong>₹{(totalPaise / 100).toLocaleString("en-IN")} in test-mode contributions</strong>
+                        <span>{deliveryContributions.length} contribution payment(s) recorded for this delivery</span>
+                      </div>
+                    </div>
+                  ) : null;
+                })()}
 
                 <div className="provider-delivery-card-footer">
                   <span>
