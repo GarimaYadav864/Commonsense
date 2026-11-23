@@ -107,6 +107,12 @@ const deliverySchema = new mongoose.Schema(
       default: null,
     },
 
+    volunteerLocation: {
+      latitude: { type: Number, min: -90, max: 90, default: null },
+      longitude: { type: Number, min: -180, max: 180, default: null },
+      updatedAt: { type: Date, default: null },
+    },
+
     receivedAt: {
       type: Date,
       default: null,
