@@ -1,6 +1,14 @@
 
 const mongoose = require("mongoose");
 
+const conditionEvidenceSchema = new mongoose.Schema({
+  condition: { type: String, enum: ["good", "fair", "damaged", "missing"], required: true },
+  notes: { type: String, trim: true, maxlength: 1000, default: "" },
+  photos: { type: [String], default: [] },
+  reportedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+  reportedAt: { type: Date, default: Date.now },
+}, { _id: false });
+
 const deliverySchema = new mongoose.Schema(
   {
     offer: {
@@ -118,6 +126,10 @@ const deliverySchema = new mongoose.Schema(
       type: Date,
       default: null,
     },
+
+    dispatchConditionReport: { type: conditionEvidenceSchema, default: null },
+
+    receiptConditionReport: { type: conditionEvidenceSchema, default: null },
 
     volunteerLocation: {
       latitude: { type: Number, min: -90, max: 90, default: null },
