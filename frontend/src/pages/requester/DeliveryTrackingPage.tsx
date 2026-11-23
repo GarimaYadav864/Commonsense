@@ -71,6 +71,8 @@ function DeliveryTrackingPage() {
   const [error, setError] = useState("");
   const [processingId, setProcessingId] = useState<string | null>(null);
   const [conditionDrafts, setConditionDrafts] = useState<Record<string, { condition: string; notes: string; photos: string[] }>>({});
+  const [reviewDrafts, setReviewDrafts] = useState<Record<string, { rating: number; comment: string }>>({});
+  const [reviewedIds, setReviewedIds] = useState<string[]>([]);
 
   const fetchDeliveries = useCallback(async () => {
     try {
@@ -120,6 +122,21 @@ function DeliveryTrackingPage() {
       setError(
         "Unable to confirm receipt. Please contact the provider or try again."
       );
+    } finally {
+      setProcessingId(null);
+    }
+  };
+
+  const submitReview = async (deliveryId: string) => {
+    const draft = reviewDrafts[deliveryId] || { rating: 5, comment: "" };
+    try {
+      setProcessingId(deliveryId);
+      setError("");
+      await api.post(`/deliveries/${deliveryId}/review`, draft);
+      setReviewedIds((current) => [...current, deliveryId]);
+      setError("Thanks! Your provider review has been submitted.");
+    } catch (error: any) {
+      setError(error?.response?.data?.message || "Unable to submit your review.");
     } finally {
       setProcessingId(null);
     }
