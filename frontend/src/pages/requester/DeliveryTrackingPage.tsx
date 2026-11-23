@@ -403,6 +403,40 @@ function DeliveryTrackingPage() {
                   )}
                 </div>
                 <DamageDisputePanel deliveryId={delivery._id} role="requester" receiptCondition={delivery.receiptConditionReport?.condition} dispute={delivery.damageDispute} onUpdated={fetchDeliveries} />
+                {delivery.status === "received" && (
+                  <section className="provider-review-panel">
+                    <h4>Rate your provider</h4>
+                    {reviewedIds.includes(delivery._id) ? (
+                      <p>Your feedback has been recorded. Thank you for helping build community trust.</p>
+                    ) : (
+                      <>
+                        <label>Rating
+                          <select
+                            value={reviewDrafts[delivery._id]?.rating ?? 5}
+                            onChange={(event) => setReviewDrafts((current) => ({ ...current, [delivery._id]: { rating: Number(event.target.value), comment: current[delivery._id]?.comment || "" } }))}
+                          >
+                            <option value={5}>5 - Excellent</option>
+                            <option value={4}>4 - Good</option>
+                            <option value={3}>3 - Average</option>
+                            <option value={2}>2 - Poor</option>
+                            <option value={1}>1 - Very poor</option>
+                          </select>
+                        </label>
+                        <label>Feedback (optional)
+                          <textarea
+                            maxLength={1000}
+                            value={reviewDrafts[delivery._id]?.comment || ""}
+                            onChange={(event) => setReviewDrafts((current) => ({ ...current, [delivery._id]: { rating: current[delivery._id]?.rating ?? 5, comment: event.target.value } }))}
+                            placeholder="Share a helpful note about your experience"
+                          />
+                        </label>
+                        <button type="button" className="condition-report-submit" disabled={processingId === delivery._id} onClick={() => submitReview(delivery._id)}>
+                          {processingId === delivery._id ? "Submitting..." : "Submit provider review"}
+                        </button>
+                      </>
+                    )}
+                  </section>
+                )}
                 <DeliveryPaymentPanel
                   deliveryId={delivery._id}
                   method={delivery.method}
