@@ -39,11 +39,51 @@ export default function CreateRequestPage() {
   const [form, setForm] = useState<RequestForm>(initialForm);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [success, setSuccess] = useState("");
+  const [coordinates, setCoordinates] = useState<{
+    latitude: number;
+    longitude: number;
+  } | null>(null);
+  const [locationLoading, setLocationLoading] = useState(false);
+  const [locationError, setLocationError] = useState("");
 
   const updateField = (field: keyof RequestForm, value: string) => {
     setForm((previous) => ({ ...previous, [field]: value }));
     setErrors((previous) => ({ ...previous, [field]: "" }));
     setSuccess("");
+
+    if (field === "location") {
+      setCoordinates(null);
+      setLocationError("");
+    }
+  };
+
+  const captureCurrentLocation = () => {
+    if (!navigator.geolocation) {
+      setLocationError("Location access is not supported by this browser.");
+      return;
+    }
+
+    setLocationLoading(true);
+    setLocationError("");
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        setCoordinates({
+          latitude: position.coords.latitude,
+          longitude: position.coords.longitude,
+        });
+        setLocationLoading(false);
+      },
+      (error) => {
+        setLocationError(
+          error.code === error.PERMISSION_DENIED
+            ? "Location permission was denied. You can still enter your area manually."
+            : "Unable to get your location. Please try again or enter it manually."
+        );
+        setLocationLoading(false);
+      },
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
+    );
   };
 
   const validateForm = () => {
@@ -83,6 +123,12 @@ export default function CreateRequestPage() {
           category: form.category,
           quantity: Number(form.quantity),
           location: form.location.trim(),
+          ...(coordinates
+            ? {
+                latitude: coordinates.latitude,
+                longitude: coordinates.longitude,
+              }
+            : {}),
           urgency: form.urgency,
         });
 
@@ -241,6 +287,23 @@ export default function CreateRequestPage() {
               value={form.location}
               onChange={(e) => updateField("location", e.target.value)}
             />
+            <button
+              type="button"
+              className="request-cancel-button"
+              onClick={captureCurrentLocation}
+              disabled={locationLoading || submitting}
+            >
+              <MapPin size={15} />
+              {locationLoading ? "Getting location..." : "Use my current location"}
+            </button>
+            {coordinates && (
+              <small className="field-hint">
+                Precise coordinates captured. Distance-based matching is enabled.
+              </small>
+            )}
+            {locationError && (
+              <small className="field-error" role="status">{locationError}</small>
+            )}
             {errors.location && (
               <small className="field-error">{errors.location}</small>
             )}
