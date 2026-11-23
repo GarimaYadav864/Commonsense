@@ -58,31 +58,49 @@ export default function CreateRequestPage() {
   };
 
   const captureCurrentLocation = () => {
-    if (!navigator.geolocation) {
-      setLocationError("Location access is not supported by this browser.");
+    setLocationError("");
+    setCoordinates(null);
+
+    if (!window.isSecureContext) {
+      setLocationError("Location requires a secure HTTPS connection. Please open the deployed Commonsense website.");
+      return;
+    }
+
+    if (!("geolocation" in navigator)) {
+      setLocationError("This browser does not support location access. Please enter your area manually.");
       return;
     }
 
     setLocationLoading(true);
-    setLocationError("");
 
     navigator.geolocation.getCurrentPosition(
       (position) => {
-        setCoordinates({
-          latitude: position.coords.latitude,
-          longitude: position.coords.longitude,
-        });
+        const latitude = position.coords.latitude;
+        const longitude = position.coords.longitude;
+
+        if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) {
+          setLocationError("Your device returned invalid coordinates. Please try again.");
+          setLocationLoading(false);
+          return;
+        }
+
+        setCoordinates({ latitude, longitude });
         setLocationLoading(false);
       },
       (error) => {
+        const messages: Record<number, string> = {
+          1: "Location permission was denied. Allow location access for this site in your browser settings, then try again.",
+          2: "Your device could not determine a location. Turn on Windows Location Services or connect to Wi-Fi, then try again.",
+          3: "Location lookup timed out. Try again with Wi-Fi enabled, or enter your area manually.",
+        };
+
         setLocationError(
-          error.code === error.PERMISSION_DENIED
-            ? "Location permission was denied. You can still enter your area manually."
-            : "Unable to get your location. Please try again or enter it manually."
+          messages[error.code] ||
+            `Unable to fetch location (browser error ${error.code}): ${error.message || "Unknown error"}`
         );
         setLocationLoading(false);
       },
-      { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
+      { enableHighAccuracy: false, timeout: 30000, maximumAge: 300000 }
     );
   };
 
@@ -297,8 +315,8 @@ export default function CreateRequestPage() {
               {locationLoading ? "Getting location..." : "Use my current location"}
             </button>
             {coordinates && (
-              <small className="field-hint">
-                Precise coordinates captured. Distance-based matching is enabled.
+              <small className="field-hint" role="status">
+                Location captured: {coordinates.latitude.toFixed(5)}, {coordinates.longitude.toFixed(5)}. Distance-based matching is enabled.
               </small>
             )}
             {locationError && (
