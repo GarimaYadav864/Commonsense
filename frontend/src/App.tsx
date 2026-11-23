@@ -34,6 +34,7 @@ import AdminMonitoring from "./pages/admin/AdminMonitoring";
 import AdminRecords from "./pages/admin/AdminRecords";
 import AdminAuditLogs from "./pages/admin/AdminAuditLogs";
 import AdminReports from "./pages/admin/AdminReports";
+import DamageDisputesPage from "./pages/admin/DamageDisputesPage";
 
 import NotificationHistoryPage from "./pages/notifications/NotificationHistoryPage";
 
@@ -105,6 +106,7 @@ function AppRoutes() {
           <Route path="records" element={<AdminRecords />} />
           <Route path="audit-logs" element={<AdminAuditLogs />} />
           <Route path="reports" element={<AdminReports />} />
+          <Route path="disputes" element={<DamageDisputesPage />} />
         </Route>
       </Route>
 
