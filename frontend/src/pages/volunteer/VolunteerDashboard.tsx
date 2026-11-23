@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import api from "../../services/api";
 import "./VolunteerDashboard.css";
+import CommunityRequestsPanel from "../../components/community/CommunityRequestsPanel";
 
 interface Delivery {
   _id: string;
@@ -137,6 +138,8 @@ function VolunteerDashboard() {
           </div>
         </div>
       </div>
+
+      <CommunityRequestsPanel />
 
       <section className="volunteer-action-card">
         <div>
