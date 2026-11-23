@@ -83,11 +83,18 @@ function DeliveryTrackingPage() {
       const response = await api.get("/deliveries/my");
       const data = response.data;
 
-      setDeliveries(
-        Array.isArray(data)
-          ? data
-          : data.deliveries || data.data || []
-      );
+      const loadedDeliveries = Array.isArray(data) ? data : data.deliveries || data.data || [];
+      setDeliveries(loadedDeliveries);
+      const providerIds = [...new Set(loadedDeliveries.map((item: any) => item.provider?._id).filter(Boolean))] as string[];
+      const reputationResults = await Promise.all(providerIds.map(async (providerId) => {
+        try {
+          const result = await api.get(`/deliveries/reputation/${providerId}`);
+          return [providerId, result.data.reputation] as const;
+        } catch {
+          return [providerId, null] as const;
+        }
+      }));
+      setReputationByProvider(Object.fromEntries(reputationResults.filter((item) => item[1])));
     } catch (err: unknown) {
       setError(
         err instanceof Error
@@ -273,6 +280,14 @@ function DeliveryTrackingPage() {
                     <strong>
                       {delivery.provider?.name || "Community Provider"}
                     </strong>
+                    {delivery.provider?._id && reputationByProvider[delivery.provider._id] && (
+                      <small>
+                        {reputationByProvider[delivery.provider._id].averageRating == null
+                          ? "No ratings yet"
+                          : `${reputationByProvider[delivery.provider._id].averageRating} / 5 from ${reputationByProvider[delivery.provider._id].reviewCount} review(s)`}
+                        { ` · ${reputationByProvider[delivery.provider._id].completedDeliveries} completed delivery(s)` }
+                      </small>
+                    )}
                   </div>
                 </div>
 
