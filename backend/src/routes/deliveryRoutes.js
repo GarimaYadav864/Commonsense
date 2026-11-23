@@ -11,6 +11,7 @@ const {
   markDispatched,
   updateVolunteerDeliveryStatus,
   updateVolunteerLocation,
+  submitConditionReport,
   confirmReceipt,
 } = require("../controllers/deliveryController");
 
@@ -57,6 +58,7 @@ router.patch(
 );
 
 router.patch("/:id/location", authorizeRoles("volunteer"), updateVolunteerLocation);
+router.post("/:id/condition-report", authorizeRoles("provider", "requester"), submitConditionReport);
 
 // Provider dispatches the resource
 router.patch(
