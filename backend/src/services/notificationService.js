@@ -91,6 +91,26 @@ const notifyAdmins = async (io, notificationData) => {
   }
 };
 
+ 
+// Notify every registered user except the person who created the request.
+const notifyCommunityUsers = async (io, notificationData, excludeUserId) => {
+  try {
+    const filter = excludeUserId ? { _id: { $ne: excludeUserId } } : {};
+    const users = await User.find(filter).select("_id");
+
+    return await Promise.all(
+      users.map((user) =>
+        notifySafely(io, {
+          ...notificationData,
+          recipient: user._id,
+        })
+      )
+    );
+  } catch (error) {
+    console.error("Community notification failed:", error.message);
+    return [];
+  }
+};
 
 module.exports = {
   createNotification,
@@ -98,4 +118,5 @@ module.exports = {
   sendNotification,
   sendNotifications,
   notifyAdmins,
+  notifyCommunityUsers,
 };
