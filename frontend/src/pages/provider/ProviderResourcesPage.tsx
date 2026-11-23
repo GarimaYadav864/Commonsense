@@ -22,6 +22,8 @@ interface Resource {
   unit: string;
   condition: string;
   location: string;
+  latitude?: number | null;
+  longitude?: number | null;
   status: string;
 }
 
@@ -54,6 +56,12 @@ function ProviderResourcesPage() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [coordinates, setCoordinates] = useState<{
+    latitude: number;
+    longitude: number;
+  } | null>(null);
+  const [locationLoading, setLocationLoading] = useState(false);
+  const [locationError, setLocationError] = useState("");
 
   const fetchResources = useCallback(async () => {
     try {
@@ -83,11 +91,46 @@ function ProviderResourcesPage() {
 
   const updateField = (field: keyof ResourceForm, value: string) => {
     setForm((current) => ({ ...current, [field]: value }));
+    if (field === "location") {
+      setCoordinates(null);
+      setLocationError("");
+    }
+  };
+
+  const captureCurrentLocation = () => {
+    if (!navigator.geolocation) {
+      setLocationError("Location access is not supported by this browser.");
+      return;
+    }
+
+    setLocationLoading(true);
+    setLocationError("");
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        setCoordinates({
+          latitude: position.coords.latitude,
+          longitude: position.coords.longitude,
+        });
+        setLocationLoading(false);
+      },
+      (error) => {
+        setLocationError(
+          error.code === error.PERMISSION_DENIED
+            ? "Location permission was denied. You can still enter your area manually."
+            : "Unable to get your location. Please try again or enter it manually."
+        );
+        setLocationLoading(false);
+      },
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
+    );
   };
 
   const openAddForm = () => {
     setEditingId(null);
     setForm(initialForm);
+    setCoordinates(null);
+    setLocationError("");
     setError("");
     setSuccess("");
     setShowForm(true);
@@ -104,6 +147,12 @@ function ProviderResourcesPage() {
       condition: resource.condition,
       location: resource.location,
     });
+    setCoordinates(
+      resource.latitude != null && resource.longitude != null
+        ? { latitude: resource.latitude, longitude: resource.longitude }
+        : null
+    );
+    setLocationError("");
     setError("");
     setSuccess("");
     setShowForm(true);
@@ -113,6 +162,8 @@ function ProviderResourcesPage() {
     setShowForm(false);
     setEditingId(null);
     setForm(initialForm);
+    setCoordinates(null);
+    setLocationError("");
   };
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
@@ -143,6 +194,12 @@ function ProviderResourcesPage() {
       description: form.description.trim(),
       quantity,
       location: form.location.trim(),
+      ...(coordinates
+        ? {
+            latitude: coordinates.latitude,
+            longitude: coordinates.longitude,
+          }
+        : {}),
     };
 
     try {
@@ -356,6 +413,25 @@ function ProviderResourcesPage() {
                   placeholder="Area, city"
                   required
                 />
+                <button
+                  type="button"
+                  className="resource-secondary-btn"
+                  onClick={captureCurrentLocation}
+                  disabled={locationLoading || saving}
+                >
+                  <MapPin size={15} />
+                  {locationLoading ? "Getting location..." : "Use my current location"}
+                </button>
+                {coordinates && (
+                  <small className="resource-form-hint">
+                    Coordinates captured. Distance-based matching is enabled.
+                  </small>
+                )}
+                {locationError && (
+                  <small className="resource-form-error" role="status">
+                    {locationError}
+                  </small>
+                )}
               </label>
             </div>
 
