@@ -400,7 +400,7 @@ function DeliveryTrackingPage() {
                   {["dispatched", "delivered"].includes(delivery.status) && (
                     <button
                       className="receipt-btn"
-                      disabled={processingId === delivery._id}
+                      disabled={processingId === delivery._id || !delivery.receiptConditionReport}
                       onClick={() => confirmReceipt(delivery._id)}
                     >
                       <CheckCircle2 size={16} />
