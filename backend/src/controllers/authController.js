@@ -77,26 +77,45 @@ const registerUser = async (req, res) => {
     // 5. Check for existing user
     const existingUser = await User.findOne({
       email: normalizedEmail,
-    });
+    }).select("+password");
+
+    let user;
 
     if (existingUser) {
-      return res.status(409).json({
-        success: false,
-        message: "An account with this email already exists",
+      // Adding another role must prove ownership of the existing account.
+      // Never create a second account or grant a role based on email alone.
+      const isPasswordValid = await bcrypt.compare(password, existingUser.password);
+
+      if (!isPasswordValid) {
+        return res.status(401).json({
+          success: false,
+          message: "An account already exists with this email. Enter its existing password to add another role.",
+        });
+      }
+
+      const existingRoles = Array.isArray(existingUser.roles) && existingUser.roles.length
+        ? existingUser.roles
+        : [existingUser.role].filter(Boolean);
+
+      user = existingUser;
+      user.roles = [...new Set([...existingRoles, selectedRole])];
+      user.activeRole = selectedRole;
+      user.role = selectedRole;
+      await user.save();
+    } else {
+      // Hash password only for a brand-new account.
+      const hashedPassword = await bcrypt.hash(password, 12);
+
+      user = await User.create({
+        name: name.trim(),
+        email: normalizedEmail,
+        password: hashedPassword,
+        location: location.trim(),
+        role: selectedRole,
+        roles: [selectedRole],
+        activeRole: selectedRole,
       });
     }
-
-    // 6. Hash password
-    const hashedPassword = await bcrypt.hash(password, 12);
-
-    // 7. Create user
-    const user = await User.create({
-      name: name.trim(),
-      email: normalizedEmail,
-      password: hashedPassword,
-      location: location.trim(),
-      role: selectedRole,
-    });
 
     // 8. Generate JWT
     const token = jwt.sign(
@@ -115,7 +134,9 @@ const registerUser = async (req, res) => {
         name: user.name,
         email: user.email,
         location: user.location,
-        role: user.role,
+        role: user.activeRole || user.role,
+        roles: user.roles || [user.role],
+        activeRole: user.activeRole || user.role,
       },
     });
   } catch (error) {
@@ -207,7 +228,9 @@ const loginUser = async (req, res) => {
         name: user.name,
         email: user.email,
         location: user.location,
-        role: user.role,
+        role: user.activeRole || user.role,
+        roles: user.roles || [user.role],
+        activeRole: user.activeRole || user.role,
       },
     });
   } catch (error) {
@@ -304,7 +327,9 @@ const getMe = async (req, res) => {
         name: req.user.name,
         email: req.user.email,
         location: req.user.location,
-        role: req.user.role,
+        role: req.user.activeRole || req.user.role,
+        roles: req.user.roles || [req.user.role],
+        activeRole: req.user.activeRole || req.user.role,
       },
     });
   } catch (error) {
