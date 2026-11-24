@@ -42,6 +42,8 @@ function MyRequestsPage() {
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("all");
   const [cancellingId, setCancellingId] = useState<string | null>(null);
+  const [matchingId, setMatchingId] = useState<string | null>(null);
+  const [feedback, setFeedback] = useState("");
 
   const fetchRequests = useCallback(async () => {
     try {
@@ -68,6 +70,31 @@ function MyRequestsPage() {
   useEffect(() => {
     fetchRequests();
   }, [fetchRequests]);
+
+  const handleStartMatching = async (requestId: string) => {
+    try {
+      setMatchingId(requestId);
+      setError("");
+      setFeedback("");
+
+      const response = await api.post(`/offers/start/${requestId}`);
+      setFeedback(
+        response.data.message ||
+          (response.data.offer
+            ? "A provider has been notified about your request."
+            : "Matching completed. Check the result below.")
+      );
+      await fetchRequests();
+    } catch (err: any) {
+      setError(
+        err.response?.data?.message ||
+          "Unable to find a provider right now. Please try again."
+      );
+      await fetchRequests();
+    } finally {
+      setMatchingId(null);
+    }
+  };
 
   const handleCancel = async (requestId: string) => {
     const confirmed = window.confirm(
@@ -139,7 +166,7 @@ function MyRequestsPage() {
           <strong>
             {
               requests.filter((r) =>
-                ["pending", "open", "matched"].includes(r.status.toLowerCase())
+                ["pending", "matching", "offered", "open", "matched"].includes(r.status.toLowerCase())
               ).length
             }
           </strong>
@@ -170,6 +197,8 @@ function MyRequestsPage() {
         <select value={filter} onChange={(e) => setFilter(e.target.value)}>
           <option value="all">All Requests</option>
           <option value="pending">Pending</option>
+          <option value="matching">Matching</option>
+          <option value="offered">Offer sent</option>
           <option value="open">Open</option>
           <option value="matched">Matched</option>
           <option value="fulfilled">Fulfilled</option>
@@ -184,6 +213,13 @@ function MyRequestsPage() {
           <RefreshCw size={17} />
         </button>
       </div>
+
+      {feedback && (
+        <div className="requests-success" role="status">
+          {feedback}
+          <button onClick={() => setFeedback("")} aria-label="Dismiss message">×</button>
+        </div>
+      )}
 
       {error && (
         <div className="requests-error">
@@ -260,19 +296,33 @@ function MyRequestsPage() {
                   {formatDate(request.createdAt)}
                 </span>
 
-                {["pending", "open"].includes(
-                  request.status.toLowerCase()
-                ) && (
-                  <button
-                    className="cancel-request-btn"
-                    onClick={() => handleCancel(request._id)}
-                    disabled={cancellingId === request._id}
-                  >
-                    {cancellingId === request._id
-                      ? "Cancelling..."
-                      : "Cancel Request"}
-                  </button>
-                )}
+                <div className="request-card-actions">
+                  {request.status.toLowerCase() === "pending" && (
+                    <button
+                      className="cancel-request-btn"
+                      onClick={() => handleStartMatching(request._id)}
+                      disabled={matchingId === request._id}
+                    >
+                      {matchingId === request._id
+                        ? "Finding providers..."
+                        : "Find a Provider"}
+                    </button>
+                  )}
+
+                  {["pending", "matching"].includes(
+                    request.status.toLowerCase()
+                  ) && (
+                    <button
+                      className="cancel-request-btn"
+                      onClick={() => handleCancel(request._id)}
+                      disabled={cancellingId === request._id || matchingId === request._id}
+                    >
+                      {cancellingId === request._id
+                        ? "Cancelling..."
+                        : "Cancel Request"}
+                    </button>
+                  )}
+                </div>
               </div>
             </article>
           ))}
