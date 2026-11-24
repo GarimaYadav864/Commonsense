@@ -78,7 +78,7 @@ const userSchema = new mongoose.Schema(
 
 // Keep legacy records and older code compatible while roles are introduced.
 // Existing documents with only the role field are interpreted as having that one role.
-userSchema.pre("validate", function (next) {
+userSchema.pre("validate", function () {
   if (!Array.isArray(this.roles) || this.roles.length === 0) {
     this.roles = [this.role || this.activeRole || "requester"];
   } else {
@@ -94,7 +94,6 @@ userSchema.pre("validate", function (next) {
   // Preserve the old field as an alias for the currently active dashboard.
   this.role = this.activeRole;
 
-  next();
 });
 
 const User = mongoose.model("User", userSchema);
