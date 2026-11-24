@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import {
   NavLink,
@@ -27,7 +26,7 @@ import {
   Scale,
 } from "lucide-react";
 
-import { useAuth } from "../context/AuthContext";
+import { useAuth, type UserRole } from "../context/AuthContext";
 import NotificationCenter from "../components/common/NotificationCenter";
 import "./DashboardLayout.css";
 
@@ -72,14 +71,29 @@ const adminLinks: NavigationLink[] = [
   { label: "Notifications", path: "/notifications", icon: Bell, end: true },
 ];
 
+const roleDashboardPaths: Record<UserRole, string> = {
+  requester: "/requester/dashboard",
+  provider: "/provider/dashboard",
+  volunteer: "/volunteer/dashboard",
+  admin: "/admin",
+};
+
+const roleNames: Record<UserRole, string> = {
+  requester: "Requester",
+  provider: "Provider",
+  volunteer: "Volunteer",
+  admin: "Admin",
+};
+
 export default function DashboardLayout() {
   const [menuOpen, setMenuOpen] = useState(false);
 
   const navigate = useNavigate();
   const location = useLocation();
-  const { user, logout } = useAuth();
+  const { user, logout, setActiveRole } = useAuth();
 
-  const roleKey = String(user?.role ?? "").toLowerCase();
+  const roleKey = (user?.activeRole ?? user?.role ?? "").toLowerCase() as UserRole;
+  const assignedRoles = user?.roles ?? (user?.role ? [user.role] : []);
 
   useEffect(() => {
     setMenuOpen(false);
@@ -96,9 +110,16 @@ export default function DashboardLayout() {
             ? volunteerLinks
             : [];
 
-  const roleLabel = roleKey
-    ? roleKey.charAt(0).toUpperCase() + roleKey.slice(1)
-    : "Community Member";
+  const roleLabel = roleNames[roleKey] ?? "Community Member";
+
+  const handleRoleChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+    const nextRole = event.target.value as UserRole;
+    if (!assignedRoles.includes(nextRole)) return;
+
+    setActiveRole(nextRole);
+    setMenuOpen(false);
+    navigate(roleDashboardPaths[nextRole], { replace: true });
+  };
 
   const handleLogout = () => {
     logout();
@@ -129,6 +150,24 @@ export default function DashboardLayout() {
             <X size={20} />
           </button>
         </div>
+
+        {assignedRoles.length > 1 && (
+          <div className="workspace-role-switcher">
+            <label htmlFor="workspace-role">SWITCH WORKSPACE</label>
+            <select
+              id="workspace-role"
+              value={roleKey}
+              onChange={handleRoleChange}
+              aria-label="Switch workspace"
+            >
+              {assignedRoles.map((role) => (
+                <option key={role} value={role}>
+                  {roleNames[role]}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
 
         <div className="sidebar-section-label">WORKSPACE</div>
 
