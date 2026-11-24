@@ -34,7 +34,7 @@ async function createAdmin() {
 
     const existingAdmin = await User.findOne({
       email,
-      role: "admin",
+      $or: [{ roles: "admin" }, { role: "admin" }],
     });
 
     if (existingAdmin) {
