@@ -4,7 +4,7 @@ import "./DamageDisputePanel.css";
 type Dispute = { status: "open" | "provider_responded" | "resolved" | "rejected"; reason: "damaged" | "missing"; description: string; providerResponse?: { message?: string }; resolution?: { decision?: string; notes?: string } };
 type Props = { deliveryId: string; role: "requester" | "provider"; receiptCondition?: string; dispute?: Dispute | null; onUpdated: () => void };
 export default function DamageDisputePanel({ deliveryId, role, receiptCondition, dispute, onUpdated }: Props) {
- const [reason,setReason]=useState<"damaged"|"missing">(receiptCondition==="missing"?"missing":"damaged");
+ const [reason]=useState<"damaged"|"missing">(receiptCondition==="missing"?"missing":"damaged");
  const [message,setMessage]=useState(""); const [busy,setBusy]=useState(false); const [error,setError]=useState(""); const [success,setSuccess]=useState("");
  const submit=async()=>{try{setBusy(true);setError("");setSuccess("");if(role==="requester"){await api.post(`/deliveries/${deliveryId}/disputes`,{reason,description:message});setSuccess("Dispute submitted. An admin will review both sides.");}else{await api.post(`/deliveries/${deliveryId}/disputes/respond`,{message});setSuccess("Your response was submitted.");}setMessage("");onUpdated();}catch(err:any){setError(err.response?.data?.message||"Unable to submit this update.");}finally{setBusy(false);}};
  return <section className="damage-dispute-panel"><div className="damage-dispute-heading"><strong>Damage & missing-item dispute</strong>{dispute&&<span className={`dispute-status ${dispute.status}`}>{dispute.status.replace("_"," ")}</span>}</div>
