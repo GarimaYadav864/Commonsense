@@ -35,9 +35,12 @@ export default function LoginPage() {
 
       const loggedInUser = await login(email, password);
 
-      navigate(`/${loggedInUser.role}/dashboard`, {
-        replace: true,
-      });
+      const dashboardPath =
+        loggedInUser.activeRole === "admin"
+          ? "/admin"
+          : `/${loggedInUser.activeRole}/dashboard`;
+
+      navigate(dashboardPath, { replace: true });
     } catch (err: any) {
       setError(
         err.response?.data?.message ||
@@ -85,7 +88,8 @@ export default function LoginPage() {
           <span className="auth-eyebrow">YOUR COMMUNITY AWAITS</span>
           <h2>Welcome back.</h2>
           <p className="auth-subtitle">
-            Sign in to continue to your Commonsense account.
+            Sign in once to access all the roles linked to your account.
+            You can switch workspaces anytime from your dashboard.
           </p>
 
           <form onSubmit={handleSubmit}>
