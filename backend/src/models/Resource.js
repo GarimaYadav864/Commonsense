@@ -85,17 +85,13 @@ const resourceSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-resourceSchema.pre("validate", function (next) {
+resourceSchema.pre("validate", function () {
   const hasLatitude = this.latitude != null;
   const hasLongitude = this.longitude != null;
 
   if (hasLatitude !== hasLongitude) {
-    return next(
-      new Error("Latitude and longitude must be provided together")
-    );
+    throw new Error("Latitude and longitude must be provided together");
   }
-
-  next();
 });
 
 // Public matching queries can efficiently filter active listings.
