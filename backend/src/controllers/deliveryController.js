@@ -604,9 +604,6 @@ const submitConditionReport = async (req, res) => {
     if (!validPhotos) return res.status(400).json({ success: false, message: "Each photo must be a JPEG, PNG or WebP image under 350 KB" });
     // Authorization is based on the delivery relationship, not the currently
     // selected dashboard role. A dual-role account can act in either capacity.
-    const isProvider = stage === "dispatch";
-    const isRequester = stage === "receipt";
-    if (!isProvider && !isRequester) return res.status(403).json({ success: false, message: "You are not allowed to submit this condition report" });
     const reportField = stage === "dispatch" ? "dispatchConditionReport" : "receiptConditionReport";
     const filter = { _id: req.params.id, [reportField]: null };
     if (stage === "dispatch") Object.assign(filter, { provider: req.user._id, status: "arranged" });
