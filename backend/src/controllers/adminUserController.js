@@ -34,10 +34,14 @@ const getAllUsers = async (req, res) => {
         "\\$&"
       );
 
-      filter.$or = [
-        { name: { $regex: escapedSearch, $options: "i" } },
-        { email: { $regex: escapedSearch, $options: "i" } },
-        { location: { $regex: escapedSearch, $options: "i" } },
+      filter.$and = [
+        {
+          $or: [
+            { name: { $regex: escapedSearch, $options: "i" } },
+            { email: { $regex: escapedSearch, $options: "i" } },
+            { location: { $regex: escapedSearch, $options: "i" } },
+          ],
+        },
       ];
     }
 
