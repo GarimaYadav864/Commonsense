@@ -1,4 +1,3 @@
-
 import { useState, type FormEvent } from "react";
 
 import {
@@ -44,6 +43,7 @@ export default function CreateRequestPage() {
     longitude: number;
   } | null>(null);
   const [locationLoading, setLocationLoading] = useState(false);
+  const [geocodingLoading, setGeocodingLoading] = useState(false);
   const [locationError, setLocationError] = useState("");
 
   const updateField = (field: keyof RequestForm, value: string) => {
@@ -66,7 +66,7 @@ export default function CreateRequestPage() {
       return;
     }
 
-    if (!("geolocation" in navigator)) {
+    if (!( "geolocation" in navigator)) {
       setLocationError("This browser does not support location access. Please enter your area manually.");
       return;
     }
@@ -102,6 +102,60 @@ export default function CreateRequestPage() {
       },
       { enableHighAccuracy: false, timeout: 30000, maximumAge: 300000 }
     );
+  };
+
+  const geocodeManualLocation = async () => {
+    const searchLocation = form.location.trim();
+
+    if (!searchLocation) {
+      setLocationError("Enter an area, city or PIN code before finding coordinates.");
+      return;
+    }
+
+    setLocationError("");
+    setCoordinates(null);
+    setGeocodingLoading(true);
+
+    try {
+      const query = searchLocation.toLowerCase().includes("india")
+        ? searchLocation
+        : `${searchLocation}, India`;
+      const url = `https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&countrycodes=in&q=${encodeURIComponent(query)}`;
+      const response = await fetch(url, {
+        headers: { Accept: "application/json" },
+      });
+
+      if (!response.ok) {
+        throw new Error("The location search service is temporarily unavailable. Please try again.");
+      }
+
+      const results: Array<{ lat: string; lon: string; display_name?: string }> =
+        await response.json();
+      const match = results[0];
+
+      if (!match) {
+        setLocationError("We couldn't find coordinates for that location. Try adding your district or PIN code.");
+        return;
+      }
+
+      const latitude = Number(match.lat);
+      const longitude = Number(match.lon);
+
+      if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) {
+        throw new Error("The location service returned invalid coordinates. Please try another location.");
+      }
+
+      setCoordinates({ latitude, longitude });
+      setLocationError("");
+    } catch (error: unknown) {
+      setLocationError(
+        error instanceof Error
+          ? error.message
+          : "Unable to find coordinates for this location. Please try again."
+      );
+    } finally {
+      setGeocodingLoading(false);
+    }
   };
 
   const validateForm = () => {
@@ -305,18 +359,29 @@ export default function CreateRequestPage() {
               value={form.location}
               onChange={(e) => updateField("location", e.target.value)}
             />
-            <button
-              type="button"
-              className="request-cancel-button"
-              onClick={captureCurrentLocation}
-              disabled={locationLoading || submitting}
-            >
-              <MapPin size={15} />
-              {locationLoading ? "Getting location..." : "Use my current location"}
-            </button>
+            <div className="request-location-actions">
+              <button
+                type="button"
+                className="request-cancel-button"
+                onClick={captureCurrentLocation}
+                disabled={locationLoading || geocodingLoading || submitting}
+              >
+                <MapPin size={15} />
+                {locationLoading ? "Getting location..." : "Use my current location"}
+              </button>
+              <button
+                type="button"
+                className="request-cancel-button"
+                onClick={geocodeManualLocation}
+                disabled={locationLoading || geocodingLoading || submitting}
+              >
+                <MapPin size={15} />
+                {geocodingLoading ? "Finding coordinates..." : "Find coordinates from entered location"}
+              </button>
+            </div>
             {coordinates && (
               <small className="field-hint" role="status">
-                Location captured: {coordinates.latitude.toFixed(5)}, {coordinates.longitude.toFixed(5)}. Distance-based matching is enabled.
+                Coordinates captured: {coordinates.latitude.toFixed(5)}, {coordinates.longitude.toFixed(5)}. Distance-based matching is enabled.
               </small>
             )}
             {locationError && (
@@ -326,7 +391,7 @@ export default function CreateRequestPage() {
               <small className="field-error">{errors.location}</small>
             )}
             <small className="field-hint">
-              This helps us identify relevant nearby resource providers.
+              You can use your device location or find coordinates from the area you entered. Manual location lookup sends that place name to OpenStreetMap.
             </small>
           </div>
 
