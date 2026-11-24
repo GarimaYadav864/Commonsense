@@ -143,7 +143,14 @@ export default function ProviderDeliveriesPage() {
   };
 
   const updateConditionDraft = (id: string, patch: Partial<{ condition: string; notes: string; photos: string[] }>) => {
-    setConditionDrafts((current) => ({ ...current, [id]: { condition: "good", notes: "", photos: [], ...current[id], ...patch } }));
+    setConditionDrafts((current) => ({
+      ...current,
+      [id]: {
+        condition: patch.condition ?? current[id]?.condition ?? "good",
+        notes: patch.notes ?? current[id]?.notes ?? "",
+        photos: patch.photos ?? current[id]?.photos ?? [],
+      },
+    }));
   };
 
   const addConditionPhotos = async (id: string, files: FileList | null) => {
