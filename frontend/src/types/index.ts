@@ -60,6 +60,8 @@ export interface User {
   email: string;
   location: string;
   role: UserRole;
+  roles?: UserRole[];
+  activeRole?: UserRole;
   createdAt?: string;
   updatedAt?: string;
 }

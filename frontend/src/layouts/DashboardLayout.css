@@ -347,3 +347,35 @@
     transition: none;
   }
 }
+
+/* Multi-role workspace switcher */
+.workspace-role-switcher {
+  display: grid;
+  gap: 8px;
+  margin: 22px 8px 0;
+}
+
+.workspace-role-switcher label {
+  color: #91a69a;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 1.5px;
+}
+
+.workspace-role-switcher select {
+  width: 100%;
+  min-height: 40px;
+  padding: 0 11px;
+  border: 1px solid rgba(214,177,92,0.35);
+  border-radius: 7px;
+  background: #174138;
+  color: #f8f6ef;
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.workspace-role-switcher select:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 3px;
+}

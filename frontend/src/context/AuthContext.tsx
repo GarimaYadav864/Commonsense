@@ -17,6 +17,8 @@ export interface AuthUser {
   email: string;
   location?: string;
   role: UserRole;
+  roles: UserRole[];
+  activeRole: UserRole;
 }
 
 interface RegisterData {
@@ -33,6 +35,7 @@ interface AuthContextType {
   loading: boolean;
   login: (email: string, password: string) => Promise<AuthUser>;
   register: (data: RegisterData) => Promise<AuthUser>;
+  setActiveRole: (role: UserRole) => void;
   logout: () => void;
 }
 
@@ -41,25 +44,46 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 const TOKEN_KEY = "commonsense_token";
 const USER_KEY = "commonsense_user";
 
+const VALID_ROLES: UserRole[] = [
+  "requester",
+  "provider",
+  "volunteer",
+  "admin",
+];
+
 function normalizeUser(rawUser: any): AuthUser {
   if (!rawUser || typeof rawUser !== "object") {
     throw new Error("Invalid user information received from the server.");
   }
 
   const id = rawUser.id || rawUser._id;
-  const validRoles: UserRole[] = [
-    "requester",
-    "provider",
-    "volunteer",
-    "admin",
-  ];
+  const legacyRole = rawUser.role;
+  // Build the role list explicitly so TypeScript does not infer unknown[]
+  // from the untyped API payload.
+  const roles: UserRole[] = [];
+  if (Array.isArray(rawUser.roles)) {
+    rawUser.roles.forEach((role: unknown) => {
+      if (
+        typeof role === "string" &&
+        VALID_ROLES.includes(role as UserRole) &&
+        !roles.includes(role as UserRole)
+      ) {
+        roles.push(role as UserRole);
+      }
+    });
+  }
 
-  if (
-    !id ||
-    !rawUser.name ||
-    !rawUser.email ||
-    !validRoles.includes(rawUser.role)
-  ) {
+  // Older API responses and cached sessions contain only role.
+  if (roles.length === 0 && VALID_ROLES.includes(legacyRole)) {
+    roles.push(legacyRole);
+  }
+
+  const requestedActiveRole = rawUser.activeRole || legacyRole;
+  const activeRole = roles.includes(requestedActiveRole)
+    ? requestedActiveRole
+    : roles[0];
+
+  if (!id || !rawUser.name || !rawUser.email || !activeRole) {
     throw new Error("The server returned incomplete user information.");
   }
 
@@ -68,7 +92,9 @@ function normalizeUser(rawUser: any): AuthUser {
     name: rawUser.name,
     email: rawUser.email,
     location: rawUser.location || "",
-    role: rawUser.role,
+    role: activeRole,
+    roles,
+    activeRole,
   };
 }
 
@@ -116,8 +142,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
         if (cancelled) return;
 
-        localStorage.setItem(USER_KEY, JSON.stringify(verifiedUser));
-        setUser(verifiedUser);
+        // Preserve the locally selected dashboard if the account still has it.
+        setUser((currentUser) => {
+          const preferredRole = currentUser?.activeRole;
+          const nextUser = preferredRole && verifiedUser.roles.includes(preferredRole)
+            ? { ...verifiedUser, role: preferredRole, activeRole: preferredRole }
+            : verifiedUser;
+
+          localStorage.setItem(USER_KEY, JSON.stringify(nextUser));
+          return nextUser;
+        });
       } catch (error: any) {
         if (cancelled) return;
 
@@ -181,6 +215,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return saveSession(response.data.token, response.data.user);
   };
 
+  const setActiveRole = (role: UserRole) => {
+    setUser((currentUser) => {
+      if (!currentUser || !currentUser.roles.includes(role)) {
+        return currentUser;
+      }
+
+      const updatedUser = {
+        ...currentUser,
+        role,
+        activeRole: role,
+      };
+
+      localStorage.setItem(USER_KEY, JSON.stringify(updatedUser));
+      return updatedUser;
+    });
+  };
+
   const logout = () => {
     clearStoredSession();
     setToken(null);
@@ -190,7 +241,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   return (
     <AuthContext.Provider
-      value={{ user, token, loading, login, register, logout }}
+      value={{ user, token, loading, login, register, setActiveRole, logout }}
     >
       {children}
     </AuthContext.Provider>

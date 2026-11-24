@@ -117,13 +117,15 @@ export default function RegisterPage() {
           <h1>Create your account.</h1>
           <p>
             Join a community where resources find the people who need them.
+            One account can have multiple roles.
           </p>
         </div>
 
         <form className="register-form" onSubmit={handleSubmit}>
           <h3>How would you like to participate?</h3>
           <p className="register-hint">
-            Choose the role that best describes you.
+            Choose the role you want to add. Already registered? Use the same
+            email and your existing password to add another role to that account.
           </p>
 
           <div className="role-grid">
@@ -188,6 +190,9 @@ export default function RegisterPage() {
 
             <div>
               <label htmlFor="register-password">Password</label>
+              <p className="register-hint">
+                For an existing account, enter the password you already use.
+              </p>
               <div className="register-password-wrap">
                 <input
                   id="register-password"

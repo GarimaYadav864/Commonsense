@@ -19,6 +19,8 @@ interface CommunityUser {
   name: string;
   email: string;
   role: UserRole;
+  roles?: UserRole[];
+  activeRole?: UserRole;
   location?: string;
   createdAt: string;
 }
@@ -218,9 +220,16 @@ export default function AdminUsers() {
                     </td>
 
                     <td>
-                      <span className={`admin-role-badge ${user.role}`}>
-                        {roleLabels[user.role]}
-                      </span>
+                      <div className="admin-member-roles">
+                        {(user.roles?.length ? user.roles : [user.role]).map((assignedRole) => (
+                          <span
+                            key={assignedRole}
+                            className={`admin-role-badge ${assignedRole}`}
+                          >
+                            {roleLabels[assignedRole]}
+                          </span>
+                        ))}
+                      </div>
                     </td>
 
                     <td>

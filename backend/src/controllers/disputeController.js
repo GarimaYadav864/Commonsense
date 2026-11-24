@@ -141,7 +141,11 @@ const getDisputeHistory = async (req, res) => {
     const delivery = await Delivery.findById(req.params.id).select("requester provider");
     if (!delivery) return res.status(404).json({ success: false, message: "Delivery not found" });
     const isParty = [delivery.requester.toString(), delivery.provider.toString()].includes(req.user._id.toString());
-    if (!isParty && req.user.role !== "admin") return res.status(403).json({ success: false, message: "You are not allowed to view this dispute history" });
+    const userRoles = Array.isArray(req.user.roles) && req.user.roles.length
+      ? req.user.roles
+      : [req.user.role].filter(Boolean);
+    const isAdmin = userRoles.includes("admin");
+    if (!isParty && !isAdmin) return res.status(403).json({ success: false, message: "You are not allowed to view this dispute history" });
     const events = await DisputeEvent.find({ delivery: delivery._id }).populate("actor", "name role").sort({ createdAt: 1 });
     return res.status(200).json({ success: true, events });
   } catch (error) {
