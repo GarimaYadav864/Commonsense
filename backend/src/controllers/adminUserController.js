@@ -24,7 +24,7 @@ const getAllUsers = async (req, res) => {
         });
       }
 
-      filter.role = role;
+      filter.$or = [{ roles: role }, { role }];
     }
 
     // Escape regex special characters in user input.
@@ -43,7 +43,7 @@ const getAllUsers = async (req, res) => {
 
     const [users, totalUsers] = await Promise.all([
       User.find(filter)
-        .select("_id name email role location createdAt")
+         .select("_id name email role roles activeRole location createdAt")
         .sort({ createdAt: -1 })
         .skip((page - 1) * limit)
         .limit(limit)
