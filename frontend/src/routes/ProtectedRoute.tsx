@@ -23,8 +23,13 @@ export default function ProtectedRoute({
     return <Navigate to="/login" replace />;
   }
 
-  if (allowedRoles && !allowedRoles.includes(user.role)) {
-    return <Navigate to={`/${user.role}/dashboard`} replace />;
+  const userRoles = user.roles?.length ? user.roles : [user.role];
+  const hasAccess =
+    !allowedRoles || allowedRoles.some((role) => userRoles.includes(role));
+
+  if (!hasAccess) {
+    const fallbackRole = user.activeRole || userRoles[0] || "requester";
+    return <Navigate to={`/${fallbackRole}/dashboard`} replace />;
   }
 
   return <Outlet />;
