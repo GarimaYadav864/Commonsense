@@ -43,8 +43,13 @@ interface Delivery {
     category?: string;
   };
   provider?: {
+    _id?: string;
     name: string;
     location?: string;
+  };
+  volunteer?: {
+    _id: string;
+    name?: string;
   };
 }
 
@@ -72,7 +77,10 @@ function DeliveryTrackingPage() {
   const [processingId, setProcessingId] = useState<string | null>(null);
   const [conditionDrafts, setConditionDrafts] = useState<Record<string, { condition: string; notes: string; photos: string[] }>>({});
   const [reviewDrafts, setReviewDrafts] = useState<Record<string, { rating: number; comment: string }>>({});
-  const [reviewedIds, setReviewedIds] = useState<string[]>([]);\n  const [volunteerReviewDrafts, setVolunteerReviewDrafts] = useState<Record<string, { rating: number; comment: string }>>({});\n  const [volunteerReviewedIds, setVolunteerReviewedIds] = useState<string[]>([]);\n  const [reputationByVolunteer, setReputationByVolunteer] = useState<Record<string, { averageRating: number | null; reviewCount: number; completedDeliveries: number }>>({});
+  const [reviewedIds, setReviewedIds] = useState<string[]>([]);
+  const [volunteerReviewDrafts, setVolunteerReviewDrafts] = useState<Record<string, { rating: number; comment: string }>>({});
+  const [volunteerReviewedIds, setVolunteerReviewedIds] = useState<string[]>([]);
+  const [reputationByVolunteer, setReputationByVolunteer] = useState<Record<string, { averageRating: number | null; reviewCount: number; completedDeliveries: number }>>({});
   const [reputationByProvider, setReputationByProvider] = useState<Record<string, { averageRating: number | null; reviewCount: number; completedDeliveries: number }>>({});
 
   const fetchDeliveries = useCallback(async () => {
@@ -94,7 +102,15 @@ function DeliveryTrackingPage() {
           return [providerId, null] as const;
         }
       }));
-      setReputationByProvider(Object.fromEntries(reputationResults.filter((item) => item[1])));\n      const volunteerIds = [...new Set(loadedDeliveries.map((item: any) => item.volunteer?._id).filter(Boolean))] as string[];\n      const volunteerResults = await Promise.all(volunteerIds.map(async (volunteerId) => {\n        try {\n          const result = await api.get(`/deliveries/volunteer-reputation/${volunteerId}`);\n          return [volunteerId, result.data.reputation] as const;\n        } catch { return [volunteerId, null] as const; }\n      }));\n      setReputationByVolunteer(Object.fromEntries(volunteerResults.filter((item) => item[1])));
+      setReputationByProvider(Object.fromEntries(reputationResults.filter((item) => item[1])));
+      const volunteerIds = [...new Set(loadedDeliveries.map((item: any) => item.volunteer?._id).filter(Boolean))] as string[];
+      const volunteerResults = await Promise.all(volunteerIds.map(async (volunteerId) => {
+        try {
+          const result = await api.get(`/deliveries/volunteer-reputation/${volunteerId}`);
+          return [volunteerId, result.data.reputation] as const;
+        } catch { return [volunteerId, null] as const; }
+      }));
+      setReputationByVolunteer(Object.fromEntries(volunteerResults.filter((item) => item[1])));
     } catch (err: unknown) {
       setError(
         err instanceof Error
