@@ -58,11 +58,20 @@ function normalizeUser(rawUser: any): AuthUser {
 
   const id = rawUser.id || rawUser._id;
   const legacyRole = rawUser.role;
-  const roles: UserRole[] = Array.isArray(rawUser.roles)
-    ? [...new Set(rawUser.roles.filter((role: unknown): role is UserRole =>
-        typeof role === "string" && VALID_ROLES.includes(role as UserRole)
-      ))]
-    : [];
+  // Build the role list explicitly so TypeScript does not infer unknown[]
+  // from the untyped API payload.
+  const roles: UserRole[] = [];
+  if (Array.isArray(rawUser.roles)) {
+    rawUser.roles.forEach((role: unknown) => {
+      if (
+        typeof role === "string" &&
+        VALID_ROLES.includes(role as UserRole) &&
+        !roles.includes(role as UserRole)
+      ) {
+        roles.push(role as UserRole);
+      }
+    });
+  }
 
   // Older API responses and cached sessions contain only role.
   if (roles.length === 0 && VALID_ROLES.includes(legacyRole)) {
