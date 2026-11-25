@@ -1,12 +1,11 @@
-
 const Resource = require("../models/Resource");
 
 const getAIMatches = async (request, excludedResourceIds = []) => {
-  // Fetch only resources that are eligible for matching.
+  // Do not filter by exact category here. The AI service evaluates the
+  // category together with the request/resource titles and descriptions.
   const resources = await Resource.find({
-    category: request.category.toLowerCase(),
     status: "available",
-    providerAvailability: { $ne: "paused" },
+    providerAvailability: "active",
     quantity: { $gte: request.quantity },
     provider: { $ne: request.requester },
     _id: { $nin: excludedResourceIds },
@@ -14,10 +13,11 @@ const getAIMatches = async (request, excludedResourceIds = []) => {
     .populate("provider", "name location")
     .lean();
 
-  // Prepare data for the Python AI service.
   const payload = {
     request: {
       request_id: request._id.toString(),
+      title: request.title,
+      description: request.description,
       category: request.category,
       quantity: request.quantity,
       unit: request.unit,
@@ -26,12 +26,13 @@ const getAIMatches = async (request, excludedResourceIds = []) => {
       latitude: request.latitude,
       longitude: request.longitude,
     },
-
     candidates: resources
       .filter((resource) => resource.provider)
       .map((resource) => ({
         resource_id: resource._id.toString(),
         provider_id: resource.provider._id.toString(),
+        title: resource.title,
+        description: resource.description,
         category: resource.category,
         quantity_available: resource.quantity,
         unit: resource.unit,
@@ -53,7 +54,7 @@ const getAIMatches = async (request, excludedResourceIds = []) => {
 
   try {
     response = await fetch(
-      `${aiServiceUrl.replace(/\/+$/, "")}/api/matching/rank`,
+      `${aiServiceUrl.replace(/\\/+$/, "")}/api/matching/rank`,
       {
         method: "POST",
         headers: {
@@ -70,12 +71,7 @@ const getAIMatches = async (request, excludedResourceIds = []) => {
 
   if (!response.ok) {
     const errorBody = await response.text();
-
-    console.error(
-      `AI matching service returned ${response.status}:`,
-      errorBody
-    );
-
+    console.error(`AI matching service returned ${response.status}:`, errorBody);
     throw new Error(`AI matching service failed with status ${response.status}`);
   }
 
@@ -87,15 +83,10 @@ const getAIMatches = async (request, excludedResourceIds = []) => {
     throw new Error("AI matching service returned invalid JSON");
   }
 
-  // The offer controller currently expects { matches: [...] }.
   if (!result || !Array.isArray(result.matches)) {
-    throw new Error(
-      "Invalid AI response: expected a matches array"
-    );
+    throw new Error("Invalid AI response: expected a matches array");
   }
 
-  // Keep only candidates that have the identifiers needed
-  // for the offer controller to revalidate the resource.
   const validMatches = result.matches.filter(
     (candidate) =>
       candidate &&
@@ -107,10 +98,7 @@ const getAIMatches = async (request, excludedResourceIds = []) => {
     console.warn("AI response contained invalid candidate records");
   }
 
-  return {
-    ...result,
-    matches: validMatches,
-  };
+  return { ...result, matches: validMatches };
 };
 
 module.exports = { getAIMatches };
