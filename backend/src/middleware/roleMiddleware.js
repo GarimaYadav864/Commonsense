@@ -8,11 +8,13 @@ const authorizeRoles = (...allowedRoles) => {
       });
     }
 
-    // New accounts can hold multiple roles. Fall back to the legacy single
-    // role so existing database records remain authorized during migration.
-    const userRoles = Array.isArray(req.user.roles) && req.user.roles.length
-      ? req.user.roles
-      : [req.user.role].filter(Boolean);
+    // Support multi-role accounts and legacy records whose role fields
+    // may not yet be fully synchronized.
+    const userRoles = [
+      ...(Array.isArray(req.user.roles) ? req.user.roles : []),
+      req.user.role,
+      req.user.activeRole,
+    ].filter((role, index, roles) => role && roles.indexOf(role) === index);
 
     const hasRequiredRole = allowedRoles.some((role) =>
       userRoles.includes(role)
