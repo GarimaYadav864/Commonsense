@@ -8,6 +8,23 @@ const Delivery = require("../models/Delivery");
 const { getAIMatches } = require("../services/aiMatchingService");
 const { sendNotification } = require("../services/notificationService");
 
+const normalizeUnit = (unit = "") => {
+  const value = String(unit).trim().toLowerCase().replace(/\\s+/g, " ");
+  const aliases = {
+    bag: "bag", bags: "bag",
+    piece: "piece", pieces: "piece", pc: "piece", pcs: "piece",
+    packet: "packet", packets: "packet", pack: "packet", packs: "packet",
+    box: "box", boxes: "box",
+    set: "set", sets: "set",
+    kg: "kg", kilogram: "kg", kilograms: "kg",
+    g: "g", gram: "g", grams: "g",
+    l: "litre", liter: "litre", liters: "litre", litre: "litre", litres: "litre",
+    ml: "ml", millilitre: "ml", millilitres: "ml",
+  };
+  return aliases[value] || value;
+};
+
+
 // --------------------------------------------------
 // 1. SAFE NOTIFICATION HELPER
 // --------------------------------------------------
@@ -102,11 +119,13 @@ const createNextOfferForRequest = async (requestId, io) => {
           provider: candidate.provider_id,
           status: "available",
           providerAvailability: "active",
-          category: claimedRequest.category.toLowerCase(),
           quantity: { $gte: claimedRequest.quantity },
         }).session(session);
 
-        if (!selectedResource) {
+        if (
+          !selectedResource ||
+          normalizeUnit(selectedResource.unit) !== normalizeUnit(claimedRequest.unit)
+        ) {
           throw new Error("RESOURCE_UNAVAILABLE");
         }
 
