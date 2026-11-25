@@ -54,7 +54,7 @@ const getAIMatches = async (request, excludedResourceIds = []) => {
 
   try {
     response = await fetch(
-      `${aiServiceUrl.replace(/\\/+$/, "")}/api/matching/rank`,
+      `${aiServiceUrl.replace(/\/+$/, "")}/api/matching/rank`,
       {
         method: "POST",
         headers: {
