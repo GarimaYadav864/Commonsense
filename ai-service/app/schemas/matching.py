@@ -1,10 +1,11 @@
-
 from typing import Literal
 from pydantic import BaseModel, Field, model_validator
 
 
 class MatchRequest(BaseModel):
     request_id: str
+    title: str = ""
+    description: str = ""
     category: str = Field(min_length=1)
     quantity: float = Field(gt=0)
     unit: str = Field(min_length=1)
@@ -23,6 +24,8 @@ class MatchRequest(BaseModel):
 class MatchCandidate(BaseModel):
     resource_id: str
     provider_id: str
+    title: str = ""
+    description: str = ""
     category: str
     quantity_available: float = Field(ge=0)
     unit: str
