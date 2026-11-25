@@ -104,6 +104,11 @@ function RequesterOffersPage() {
       setProcessingId(offerId);
       await api.patch(`/offers/${offerId}/confirm`);
       await fetchOffers();
+
+      // Open delivery setup immediately after requester verification.
+      setDeliveryMethod("self_pickup");
+      setDeliveryQuote(null);
+      setArrangingOfferId(offerId);
     } catch {
       setError("Unable to confirm this offer. Please try again.");
     } finally {
