@@ -391,6 +391,7 @@ const respondToOffer = async (req, res) => {
           {
             new: true,
             session,
+            updatePipeline: true,
           }
         );
 
@@ -690,6 +691,7 @@ const cancelOffer = async (req, res) => {
           {
             new: true,
             session,
+            updatePipeline: true,
           }
         );
 
@@ -926,6 +928,7 @@ const processExpiredOffers = async (io) => {
           {
             new: true,
             session,
+            updatePipeline: true,
           }
         );
 
